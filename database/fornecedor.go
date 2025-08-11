@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"lapasta/internal/models"
+	"strings"
 )
 
 func (r *SQLStr) CriarFornecedor(f *models.Fornecedor) error {
@@ -206,4 +207,49 @@ func (r *SQLStr) BuscarPedidosFornecedorPorDescricaoOuId(fornecedorId int, valor
 	}
 
 	return pedidos, nil
+}
+
+func (r *SQLStr) EditarFornecedor(f *models.Fornecedor) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("erro ao iniciar transação: %w", err)
+	}
+
+	var (
+		setClauses []string
+		args       []any
+	)
+
+	if f.Nome != "" {
+		setClauses = append(setClauses, "Nome = @Nome")
+		args = append(args, sql.Named("Nome", f.Nome))
+	}
+	if f.Email != "" {
+		setClauses = append(setClauses, "Email = @Email")
+		args = append(args, sql.Named("Email", f.Email))
+	}
+	if f.Telefone != "" {
+		setClauses = append(setClauses, "Telefone = @Telefone")
+		args = append(args, sql.Named("Telefone", f.Telefone))
+	}
+
+	if len(setClauses) == 0 {
+		tx.Rollback()
+		return fmt.Errorf("nenhum campo para atualizar")
+	}
+
+	args = append(args, sql.Named("CNPJ", f.CNPJ))
+	query := fmt.Sprintf("UPDATE Fornecedores SET %s WHERE CNPJ = @CNPJ", strings.Join(setClauses, ", "))
+
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("erro ao atualizar fornecedor: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("erro ao finalizar transação: %w", err)
+	}
+
+	return nil
 }

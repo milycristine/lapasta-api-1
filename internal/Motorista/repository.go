@@ -8,6 +8,8 @@ import (
 
 type MotoristaRepository interface {
 	CriarMotorista(m *models.Motorista) error
+	EditarMotorista(m *models.Motorista) error
+	AtualizarStatusMotorista(id int, ativo bool) error
 	ListarMotoristas() ([]models.Motorista, error)
 	BuscarMotoristaPorCPFouNome(valor string) ([]models.Motorista, error)
 	BuscarMotoristaPorID(id int) (*models.Motorista, error)
@@ -46,6 +48,12 @@ func NovoMotoristaRepository(db *database.SQLStr) MotoristaRepository {
 
 func (r *motoristaRepository) CriarMotorista(m *models.Motorista) error {
 	return r.db.CriarMotorista(m)
+}
+func (r *motoristaRepository) EditarMotorista(m *models.Motorista) error {
+	return r.db.EditarMotorista(m)
+}
+func (r *motoristaRepository) AtualizarStatusMotorista(id int, ativo bool) error {
+	return r.db.AtualizarStatusMotorista(id, ativo)
 }
 
 func (r *motoristaRepository) ListarMotoristas() ([]models.Motorista, error) {

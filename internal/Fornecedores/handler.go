@@ -10,6 +10,7 @@ import (
 
 type FornecedorHandler interface {
 	CriarFornecedor(w http.ResponseWriter, r *http.Request)
+	EditarFornecedor(w http.ResponseWriter, r *http.Request)
 	ListarFornecedores(w http.ResponseWriter, r *http.Request)
 	BuscarFornecedorPorCNPJouNome(w http.ResponseWriter, r *http.Request)
 	CriarPedido(w http.ResponseWriter, r *http.Request)
@@ -49,6 +50,32 @@ func (h *fornecedorHandler) CriarFornecedor(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *fornecedorHandler) EditarFornecedor(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var fornecedor models.Fornecedor
+	response := models.ResponseDefaultModel{
+		IsSuccess: true,
+		Data:      fornecedor,
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&fornecedor); err != nil {
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = "Erro ao decodificar os dados do funcionário"
+		w.WriteHeader(http.StatusBadRequest)
+	} else if err := h.service.EditarFornecedor(&fornecedor); err != nil {
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = err.Error()
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
 	json.NewEncoder(w).Encode(response)
 }
 

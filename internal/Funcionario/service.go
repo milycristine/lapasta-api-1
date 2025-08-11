@@ -6,6 +6,7 @@ import (
 
 type FuncionarioService interface {
 	CriarFuncionario(funcionario *models.Funcionario) error
+	EditarFuncionario(funcionario *models.Funcionario) error
 	ListarFuncionarios(page int) ([]models.Funcionario, error)
 	BuscarFuncionarioPorCPF(cpf string) (*models.FuncionarioComPontos, error)
 	BuscarFuncionarioPorID(id int) (*models.Funcionario, error) 
@@ -23,9 +24,12 @@ func NovoFuncionarioService(repo FuncionarioRepository) FuncionarioService {
 	}
 }
 
-
 func (s *funcionarioService) CriarFuncionario(funcionario *models.Funcionario) error {
 	return s.repo.CriarFuncionario(funcionario)
+}
+
+func (s *funcionarioService) EditarFuncionario( funcionario *models.Funcionario)	error  {
+	return s.repo.EditarFuncionario(funcionario)
 }
 
 func (s *funcionarioService) ListarFuncionarios(page int) ([]models.Funcionario, error) {

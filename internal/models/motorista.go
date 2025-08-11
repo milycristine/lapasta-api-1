@@ -22,6 +22,7 @@ type EmissaoNota struct {
 	NumeroNota         string  `json:"numero_nota"`
 	Valor              float64 `json:"valor"`
 	DataEmissao        string  `json:"data_emissao"`
+	DataAtribuicao     string  `json:"data_atribuicao"`
 	Descricao          string  `json:"descricao"`
 	MotoristaId        int     `json:"motorista_id"`
 	MotoristaNome      string  `json:"motorista_nome"`

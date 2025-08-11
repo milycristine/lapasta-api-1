@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"lapasta/internal/models"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,18 @@ func (s *SQLStr) CriarMotorista(m *models.Motorista) error {
 	return nil
 }
 
+func (s *SQLStr) AtualizarStatusMotorista(id int, ativo bool) error {
+	query := `UPDATE Motoristas SET Ativo = @Ativo WHERE Id = @Id`
+	_, err := s.db.Exec(query,
+		sql.Named("Ativo", ativo),
+		sql.Named("Id", id),
+	)
+	if err != nil {
+		return fmt.Errorf("erro ao atualizar status do motorista: %w", err)
+	}
+	return nil
+}
+
 func (s *SQLStr) ListarMotoristas() ([]models.Motorista, error) {
 	query := `SELECT Id, Nome, Telefone, CPF, ChavePix, ValorDiaria, Ativo FROM Motoristas`
 	rows, err := s.db.Query(query)
@@ -74,6 +87,83 @@ func (s *SQLStr) ListarMotoristas() ([]models.Motorista, error) {
 	}
 	return motoristas, nil
 }
+
+func (s *SQLStr) EditarMotorista(m *models.Motorista) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("erro ao iniciar transação: %w", err)
+	}
+
+	var (
+		setClauses []string
+		args       []any
+	)
+
+	
+	if m.Nome != "" {
+		setClauses = append(setClauses, "Nome = @Nome")
+		args = append(args, sql.Named("Nome", m.Nome))
+	}
+	if m.Telefone != "" {
+		setClauses = append(setClauses, "Telefone = @Telefone")
+		args = append(args, sql.Named("Telefone", m.Telefone))
+	}
+	if m.ChavePix != "" {
+		setClauses = append(setClauses, "ChavePix = @ChavePix")
+		args = append(args, sql.Named("ChavePix", m.ChavePix))
+	}
+	if m.Email != "" {
+		setClauses = append(setClauses, "Email = @Email")
+		args = append(args, sql.Named("Email", m.Email))
+	}
+
+	setClauses = append(setClauses, "ValorDiaria = @ValorDiaria")
+	args = append(args, sql.Named("ValorDiaria", m.ValorDiaria))
+
+	setClauses = append(setClauses, "KmDiaria = @KmDiaria")
+	args = append(args, sql.Named("KmDiaria", m.KmDiaria))
+
+	setClauses = append(setClauses, "Ativo = @Ativo")
+	args = append(args, sql.Named("Ativo", m.Ativo))
+
+	if len(setClauses) == 0 {
+		tx.Rollback()
+		return fmt.Errorf("nenhum campo para atualizar")
+	}
+
+	args = append(args, sql.Named("Cpf", m.CPF))
+	query := fmt.Sprintf("UPDATE Motoristas SET %s WHERE CPF = @Cpf", strings.Join(setClauses, ", "))
+
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("erro ao atualizar motorista: %w", err)
+	}
+
+	if m.Senha != "" {
+		hashedPassword := sha256.Sum256([]byte(m.Senha))
+		authUpdate := `
+			UPDATE AUTH SET 
+				password = @Password
+			WHERE username = @Username
+		`
+		_, err = tx.Exec(authUpdate,
+			sql.Named("Username", m.Email),
+			sql.Named("Password", hashedPassword[:]),
+		)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("erro ao atualizar senha: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("erro ao finalizar transação: %w", err)
+	}
+
+	return nil
+}
+
 
 func (s *SQLStr) BuscarMotoristaPorID(id int) (*models.Motorista, error) {
 	query := `
@@ -112,15 +202,16 @@ func (s *SQLStr) BuscarMotoristaPorID(id int) (*models.Motorista, error) {
 func (s *SQLStr) CriarEmissaoNota(n *models.EmissaoNota) error {
 	query := `
 		INSERT INTO EmissaoNotas 
-		(NumeroNota, Valor, DataEmissao, Descricao, MotoristaId, IdStatusLancamento)
+		(NumeroNota, Valor, DataEmissao, DataAtribuicao,  Descricao, MotoristaId, IdStatusLancamento)
 		VALUES 
-		(@NumeroNota, @Valor, @DataEmissao, @Descricao, @MotoristaId, @IdStatusLancamento)
+		(@NumeroNota, @Valor, @DataEmissao, @DataAtribuicao,  @Descricao, @MotoristaId, @IdStatusLancamento)
 	`
 
 	_, err := s.db.Exec(query,
 		sql.Named("NumeroNota", n.NumeroNota),
 		sql.Named("Valor", n.Valor),
 		sql.Named("DataEmissao", n.DataEmissao),
+		sql.Named("DataAtribuicao", time.Now().Format("2006-01-02")),
 		sql.Named("Descricao", n.Descricao),
 		sql.Named("MotoristaId", n.MotoristaId),
 		sql.Named("IdStatusLancamento", n.IdStatusLancamento),
@@ -142,6 +233,7 @@ func (s *SQLStr) ListarEmissaoNotas(page int) ([]models.EmissaoNota, error) {
 			e.NumeroNota, 
 			e.Valor, 
 			e.DataEmissao, 
+			e.DataAtribuicao, 
 			e.Descricao,
 			e.MotoristaId,
 			m.Nome AS MotoristaNome,
@@ -171,6 +263,7 @@ func (s *SQLStr) ListarEmissaoNotas(page int) ([]models.EmissaoNota, error) {
 			&n.NumeroNota,
 			&n.Valor,
 			&n.DataEmissao,
+			&n.DataAtribuicao,
 			&n.Descricao,
 			&n.MotoristaId,
 			&n.MotoristaNome,
@@ -194,6 +287,7 @@ func (s *SQLStr) FiltrarDataEmissaoNota(inicioData time.Time, fimData time.Time)
 			e.NumeroNota, 
 			e.Valor, 
 			e.DataEmissao, 
+			e.DataAtribuicao, 
 			e.Descricao,
 			e.MotoristaId,
 			m.Nome AS MotoristaNome,
@@ -203,9 +297,9 @@ func (s *SQLStr) FiltrarDataEmissaoNota(inicioData time.Time, fimData time.Time)
 		JOIN 
 			Motoristas m ON e.MotoristaId = m.Id
 		WHERE 
-			e.DataEmissao BETWEEN @InicioData AND @FimData
+			e.DataAtribuicao BETWEEN @InicioData AND @FimData
 		ORDER BY 
-			e.DataEmissao DESC
+			e.DataAtribuicao DESC
 	`
 
 	rows, err := s.db.Query(query, sql.Named("InicioData", inicioData), sql.Named("FimData", fimData))
@@ -221,6 +315,7 @@ func (s *SQLStr) FiltrarDataEmissaoNota(inicioData time.Time, fimData time.Time)
 			&n.NumeroNota,
 			&n.Valor,
 			&n.DataEmissao,
+			&n.DataAtribuicao,
 			&n.Descricao,
 			&n.MotoristaId,
 			&n.MotoristaNome,
@@ -246,6 +341,7 @@ func (s *SQLStr) BuscarEmissaoNotas(valor string) ([]models.EmissaoNota, error) 
 			e.NumeroNota, 
 			e.Valor, 
 			e.DataEmissao, 
+			e.DataAtribuicao, 
 			e.Descricao,
 			e.MotoristaId,
 			m.Nome AS MotoristaNome,
@@ -275,6 +371,7 @@ func (s *SQLStr) BuscarEmissaoNotas(valor string) ([]models.EmissaoNota, error) 
 			&n.NumeroNota,
 			&n.Valor,
 			&n.DataEmissao,
+			&n.DataAtribuicao,
 			&n.Descricao,
 			&n.MotoristaId,
 			&n.MotoristaNome,
@@ -544,6 +641,7 @@ func (s *SQLStr) ListarEmissaoNotasPorMotorista(idMotorista int) ([]models.Emiss
             e.NumeroNota, 
             e.Valor, 
             e.DataEmissao, 
+            e.DataAtribuicao, 
             e.Descricao,
             e.MotoristaId,
             m.Nome AS MotoristaNome,
@@ -574,6 +672,7 @@ func (s *SQLStr) ListarEmissaoNotasPorMotorista(idMotorista int) ([]models.Emiss
 			&n.NumeroNota,
 			&n.Valor,
 			&n.DataEmissao,
+			&n.DataAtribuicao,
 			&n.Descricao,
 			&n.MotoristaId,
 			&n.MotoristaNome,
@@ -607,6 +706,7 @@ func (s *SQLStr) FiltrarNotasMotoristaPorData(
 			en.NumeroNota,
 			en.Valor,
 			en.DataEmissao,
+			en.DataAtribuicao,
 			en.Descricao,
 			m.Nome as NomeMotorista
 		FROM NotasMotorista nm
@@ -652,6 +752,7 @@ func (s *SQLStr) FiltrarNotasMotoristaPorData(
 			&nm.NumeroNota,
 			&nm.Valor,
 			&nm.DataEmissao,
+			&nm.DataAtribuicao,
 			&nm.Descricao,
 			&nm.NomeMotorista,
 		)

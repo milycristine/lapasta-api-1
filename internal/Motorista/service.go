@@ -7,9 +7,11 @@ import (
 
 type MotoristaService interface {
 	CriarMotorista(m *models.Motorista) error
+	EditarMotorista(m *models.Motorista) error
+	AtualizarStatusMotorista(id int, ativo bool) error
 	ListarMotoristas() ([]models.Motorista, error)
 	BuscarMotoristaPorCPFouNome(valor string) ([]models.Motorista, error)
-	BuscarMotoristaPorID(id int) (*models.Motorista, error) 
+	BuscarMotoristaPorID(id int) (*models.Motorista, error)
 
 	CriarEmissaoNota(n *models.EmissaoNota) error
 	ListarEmissaoNotas(page int) ([]models.EmissaoNota, error)
@@ -46,6 +48,12 @@ func NovoMotoristaService(repo MotoristaRepository) MotoristaService {
 func (s *motoristaService) CriarMotorista(m *models.Motorista) error {
 	return s.repo.CriarMotorista(m)
 }
+func (s *motoristaService) EditarMotorista(m *models.Motorista) error {
+	return s.repo.EditarMotorista(m)
+}
+func (s *motoristaService) AtualizarStatusMotorista(id int, ativo bool) error {
+	return s.repo.AtualizarStatusMotorista(id, ativo)
+}
 
 func (s *motoristaService) ListarMotoristas() ([]models.Motorista, error) {
 	return s.repo.ListarMotoristas()
@@ -53,7 +61,7 @@ func (s *motoristaService) ListarMotoristas() ([]models.Motorista, error) {
 func (s *motoristaService) BuscarMotoristaPorCPFouNome(valor string) ([]models.Motorista, error) {
 	return s.repo.BuscarMotoristaPorCPFouNome(valor)
 }
-func (s *motoristaService) BuscarMotoristaPorID(id int) (*models.Motorista, error)  {
+func (s *motoristaService) BuscarMotoristaPorID(id int) (*models.Motorista, error) {
 	return s.repo.BuscarMotoristaPorID(id)
 }
 

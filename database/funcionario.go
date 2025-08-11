@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"lapasta/internal/models"
+	"strings"
 	"time"
 )
 
@@ -181,10 +182,120 @@ func (r *SQLStr) BuscarFuncionarioPorID(id int) (*models.Funcionario, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // retorna nulo se não encontrar
+			return nil, nil
 		}
 		return nil, fmt.Errorf("erro ao buscar funcionário por ID: %w", err)
 	}
 
 	return &f, nil
+}
+
+func (r *SQLStr) EditarFuncionario(funcionario *models.Funcionario) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("erro ao iniciar transação: %w", err)
+	}
+
+	var (
+		setClauses []string
+		args       []any
+	)
+
+	if funcionario.Nome != "" {
+		setClauses = append(setClauses, "Nome = @Nome")
+		args = append(args, sql.Named("Nome", funcionario.Nome))
+	}
+	if funcionario.Sobrenome != "" {
+		setClauses = append(setClauses, "Sobrenome = @Sobrenome")
+		args = append(args, sql.Named("Sobrenome", funcionario.Sobrenome))
+	}
+	if funcionario.Rg != "" {
+		setClauses = append(setClauses, "Rg = @Rg")
+		args = append(args, sql.Named("Rg", funcionario.Rg))
+	}
+	if funcionario.DataNasc != "" {
+		setClauses = append(setClauses, "DataNasc = @DataNasc")
+		args = append(args, sql.Named("DataNasc", funcionario.DataNasc))
+	}
+	if funcionario.Email != "" {
+		setClauses = append(setClauses, "Email = @Email")
+		args = append(args, sql.Named("Email", funcionario.Email))
+	}
+	if funcionario.Cargo != "" {
+		setClauses = append(setClauses, "Cargo = @Cargo")
+		args = append(args, sql.Named("Cargo", funcionario.Cargo))
+	}
+	if funcionario.DateAdmissao != "" {
+		setClauses = append(setClauses, "DateAdmissao = @DateAdmissao")
+		args = append(args, sql.Named("DateAdmissao", funcionario.DateAdmissao))
+	}
+	if funcionario.HoraEntrada != nil && *funcionario.HoraEntrada != "" {
+		setClauses = append(setClauses, "HoraEntrada = @HoraEntrada")
+		args = append(args, sql.Named("HoraEntrada", *funcionario.HoraEntrada))
+	}
+	if funcionario.HoraSaida != nil && *funcionario.HoraSaida != "" {
+		setClauses = append(setClauses, "HoraSaida = @HoraSaida")
+		args = append(args, sql.Named("HoraSaida", *funcionario.HoraSaida))
+	}
+	if funcionario.Salario != nil {
+		setClauses = append(setClauses, "Salario = @Salario")
+		args = append(args, sql.Named("Salario", *funcionario.Salario))
+	}
+	if funcionario.Admin != -1 { 
+		setClauses = append(setClauses, "Admin = @Admin")
+		args = append(args, sql.Named("Admin", funcionario.Admin))
+	}
+	if funcionario.Status != -1 { 
+		setClauses = append(setClauses, "Status = @Status")
+		args = append(args, sql.Named("Status", funcionario.Status))
+	}
+	if funcionario.ValeTransporteSemanal != nil {
+		setClauses = append(setClauses, "ValeTransporteSemanal = @ValeTransporteSemanal")
+		args = append(args, sql.Named("ValeTransporteSemanal", *funcionario.ValeTransporteSemanal))
+	}
+	if funcionario.ChavePix != nil && *funcionario.ChavePix != "" {
+		setClauses = append(setClauses, "ChavePix = @ChavePix")
+		args = append(args, sql.Named("ChavePix", *funcionario.ChavePix))
+	}
+
+	if len(setClauses) == 0 {
+		tx.Rollback()
+		return fmt.Errorf("nenhum campo para atualizar")
+	}
+
+	args = append(args, sql.Named("Cpf", funcionario.Cpf))
+	query := fmt.Sprintf("UPDATE Funcionarios SET %s WHERE Cpf = @Cpf", strings.Join(setClauses, ", "))
+
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("erro ao atualizar funcionário: %w", err)
+	}
+
+	// Atualiza senha, se necessário
+	if funcionario.Senha != "" {
+		hashedPassword := sha256.Sum256([]byte(funcionario.Senha))
+
+		authUpdate := `
+			UPDATE AUTH SET 
+				password = @Password
+			WHERE username = @Username
+		`
+
+		_, err = tx.Exec(authUpdate,
+			sql.Named("Username", funcionario.Email),
+			sql.Named("Password", hashedPassword[:]),
+		)
+
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("erro ao atualizar senha: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("erro ao finalizar transação: %w", err)
+	}
+
+	return nil
 }

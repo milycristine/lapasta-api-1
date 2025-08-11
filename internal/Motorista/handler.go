@@ -14,6 +14,8 @@ import (
 
 type MotoristaHandler interface {
 	CriarMotorista(w http.ResponseWriter, r *http.Request)
+	EditarMotorista(w http.ResponseWriter, r *http.Request)
+	AtualizarStatusMotorista(w http.ResponseWriter, r *http.Request)
 	ListarMotoristas(w http.ResponseWriter, r *http.Request)
 	BuscarMotoristaPorCPFouNome(w http.ResponseWriter, r *http.Request)
 	BuscarMotoristaPorID(w http.ResponseWriter, r *http.Request)
@@ -130,6 +132,69 @@ func (h *motoristaHandler) CriarMotorista(w http.ResponseWriter, r *http.Request
 
 	response.Data = motorista
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *motoristaHandler) AtualizarStatusMotorista(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Query().Get("id")
+	ativoStr := r.URL.Query().Get("ativo")
+
+	var response models.ResponseDefaultModel
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || (ativoStr != "true" && ativoStr != "false") {
+		response.IsSuccess = false
+		response.ErrorMessage = "Parâmetros inválidos (use ?id=1&ativo=true/false)"
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	ativo := ativoStr == "true"
+
+	err = h.service.AtualizarStatusMotorista(id, ativo)
+	if err != nil {
+		log.Println("Erro ao atualizar status do motorista:", err)
+		response.IsSuccess = false
+		response.ErrorMessage = "Erro ao atualizar status do motorista"
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		response.IsSuccess = true
+		response.Data = map[string]interface{}{
+			"id":    id,
+			"ativo": ativo,
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *motoristaHandler) EditarMotorista(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var motorista models.Motorista
+	response := models.ResponseDefaultModel{
+		IsSuccess: true,
+		Data:      motorista,
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&motorista); err != nil {
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = "Erro ao decodificar os dados do funcionário"
+		w.WriteHeader(http.StatusBadRequest)
+	} else if err := h.service.EditarMotorista(&motorista); err != nil {
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = err.Error()
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
 	json.NewEncoder(w).Encode(response)
 }
 

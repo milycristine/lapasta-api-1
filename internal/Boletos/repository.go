@@ -15,7 +15,11 @@ type BoletoRepository interface {
 	ListarBoletosPagos() ([]models.Boleto, error)
 	ListarBoletosPendentes() ([]models.Boleto, error)
 	AtualizarStatusBoleto(id int, statusId int) error
-	GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int) error 
+	GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int) error
+	TotalBoletosDia(data string) (float64, error)
+	TotalBoletosAtrasados() (float64, error)
+	TotalBoletosPendentesMesAtual() (float64, error)
+	TotalBoletosPagosMesAtual() (float64, error)
 }
 
 type boletoRepository struct {
@@ -61,6 +65,18 @@ func (r *boletoRepository) ListarBoletosPendentes() ([]models.Boleto, error) {
 func (r *boletoRepository) AtualizarStatusBoleto(id int, statusId int) error {
 	return r.db.AtualizarStatusBoleto(id, statusId)
 }
-func (r *boletoRepository) GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int) error  {
+func (r *boletoRepository) GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int) error {
 	return r.db.GerarEEnviarRelatorioBoletos(emailAdmin, ano, mes, fornecedorID, statusIDs)
+}
+func (r *boletoRepository) TotalBoletosDia(data string) (float64, error) {
+	return r.db.TotalBoletosDia(data)
+}
+func (r *boletoRepository) TotalBoletosAtrasados() (float64, error) {
+	return r.db.TotalBoletosAtrasados()
+}
+func (r *boletoRepository) TotalBoletosPendentesMesAtual() (float64, error) {
+	return r.db.TotalBoletosPendentesMesAtual()
+}
+func (r *boletoRepository) TotalBoletosPagosMesAtual() (float64, error) {
+	return r.db.TotalBoletosPagosMesAtual()
 }

@@ -78,7 +78,7 @@ func (r *SQLStr) ListarBoletosComFiltro(ano, mes int, fornecedorID *int, statusI
 	return boletos, nil
 }
 
-func gerarRelatorioPDF(boletos []models.BoletoRelatorio) ([]byte, error) {
+func gerarRelatorioPDF(boletos []models.BoletoRelatorio, statusIDs []int) ([]byte, error) {
 	pdf := gofpdf.New("L", "mm", "A4", "")
 
 	pdf.AddUTF8Font("OpenSans", "", "fonts/OpenSans-Regular.ttf")
@@ -101,6 +101,9 @@ func gerarRelatorioPDF(boletos []models.BoletoRelatorio) ([]byte, error) {
 	pdf.Ln(-1)
 
 	pdf.SetFont("OpenSans", "", 10)
+
+	var total float64
+
 	for _, b := range boletos {
 		pdf.CellFormat(widths[0], 8, b.FornecedorNome, "1", 0, "", false, 0, "")
 		pdf.CellFormat(widths[1], 8, b.DataVencimento.Format("02/01/2006"), "1", 0, "C", false, 0, "")
@@ -119,7 +122,28 @@ func gerarRelatorioPDF(boletos []models.BoletoRelatorio) ([]byte, error) {
 
 		pdf.CellFormat(widths[4], 8, statusTexto, "1", 0, "C", false, 0, "")
 		pdf.Ln(-1)
+
+		total += b.Valor
 	}
+
+	// Determina o título do total com base nos statusIDs
+	statusLabel := "Geral"
+	if len(statusIDs) == 1 {
+		switch statusIDs[0] {
+		case 1:
+			statusLabel = "Pendentes"
+		case 2:
+			statusLabel = "Pagos"
+		case 3:
+			statusLabel = "Atrasados"
+		}
+	}
+
+	pdf.SetFont("OpenSans", "B", 11)
+	pdf.CellFormat(widths[0]+widths[1], 10, "TOTAL "+statusLabel, "1", 0, "R", false, 0, "")
+	pdf.CellFormat(widths[2], 10, fmt.Sprintf("R$ %.2f", total), "1", 0, "R", false, 0, "")
+	pdf.CellFormat(widths[3]+widths[4], 10, "", "1", 0, "", false, 0, "")
+	pdf.Ln(-1)
 
 	var buf bytes.Buffer
 	if err := pdf.Output(&buf); err != nil {
@@ -132,8 +156,8 @@ func gerarRelatorioPDF(boletos []models.BoletoRelatorio) ([]byte, error) {
 func (s *SQLStr) enviarEmailComAnexoPDF(emailAdmin string, fileContent []byte, mes, ano int) error {
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
-	senderEmail := "email@gmail.com"
-	senderPassword := "senha"
+	senderEmail := "emilycristinee21@gmail.com"
+	senderPassword := "sapb jvda qxzj dguk"
 	subject := fmt.Sprintf("Relatório Mensal de Boletos - %02d/%d", mes, ano)
 	body := fmt.Sprintf("Olá, em anexo está o relatório mensal de boletos do mês %02d do ano %d.", mes, ano)
 
@@ -208,7 +232,7 @@ func (s *SQLStr) GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, f
 		return fmt.Errorf("nenhum boleto encontrado para os filtros informados")
 	}
 
-	pdfBytes, err := gerarRelatorioPDF(boletos)
+	pdfBytes, err := gerarRelatorioPDF(boletos, statusIDs)
 	if err != nil {
 		return fmt.Errorf("erro ao gerar PDF: %w", err)
 	}

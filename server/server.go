@@ -107,11 +107,13 @@ func Controllers() {
 	http.HandleFunc("/listarValePorSemana", valeHandler.ListarValesDaSemana)
 
 	http.HandleFunc("/funcionario", funcionarioHandler.CriarFuncionario)
+	http.HandleFunc("/editarFuncionario", funcionarioHandler.EditarFuncionario)
 	http.HandleFunc("/listarFuncionario", funcionarioHandler.ListarFuncionarios)
 	http.HandleFunc("/buscarFuncionario", funcionarioHandler.BuscarFuncionarioPorCPF)
 	http.HandleFunc("/buscarFuncionarioPorId", funcionarioHandler.BuscarFuncionarioPorID)
 
 	http.HandleFunc("/fornecedores", fornecedorHandler.CriarFornecedor)
+	http.HandleFunc("/editarFornecedores", fornecedorHandler.EditarFornecedor)
 	http.HandleFunc("/listarFornecedores", fornecedorHandler.ListarFornecedores)
 	http.HandleFunc("/fornecedores/buscar", fornecedorHandler.BuscarFornecedorPorCNPJouNome)
 	http.HandleFunc("/pedidoFornecedor", fornecedorHandler.CriarPedido)
@@ -127,9 +129,12 @@ func Controllers() {
 	http.HandleFunc("/boletoVencidos", boletoHandler.ListarBoletosVencidos)
 	http.HandleFunc("/boletoPendentes", boletoHandler.ListarBoletosPendentes)
 	http.HandleFunc("/atualizarStatusBoleto", boletoHandler.AtualizarBoleto)
-	http.HandleFunc("/gerarRelatorio", boletoHandler.GerarEEnviarRelatorioBoletos)
+	http.HandleFunc("/gerarRelatorio", boletoHandler.GerarEEnviarRelatorioBoletos)	
+	http.HandleFunc("/boletostotais", boletoHandler.TotaisBoletos)
 
-	http.HandleFunc("/motorista", motoristaHandler.CriarMotorista)
+	http.HandleFunc("/motorista", motoristaHandler.CriarMotorista)	
+	http.HandleFunc("/editarMotorista", motoristaHandler.EditarMotorista)
+	http.HandleFunc("/statusmotorista", motoristaHandler.AtualizarStatusMotorista)
 	http.HandleFunc("/listarMotoristas", motoristaHandler.ListarMotoristas)
 	http.HandleFunc("/buscasMotoristaPorId", motoristaHandler.BuscarMotoristaPorID)
 	http.HandleFunc("/emissaoNota", motoristaHandler.CriarEmissaoNota)

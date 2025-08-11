@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type BoletoHandler interface {
@@ -15,11 +16,12 @@ type BoletoHandler interface {
 	ListarBoletosPorPedido(w http.ResponseWriter, r *http.Request)
 	ListarBoletosDoDia(w http.ResponseWriter, r *http.Request)
 	PagarBoleto(w http.ResponseWriter, r *http.Request)
-	ListarBoletosPagos(w http.ResponseWriter, r *http.Request) // adicionado
+	ListarBoletosPagos(w http.ResponseWriter, r *http.Request)
 	ListarBoletosVencidos(w http.ResponseWriter, r *http.Request)
 	ListarBoletosPendentes(w http.ResponseWriter, r *http.Request)
 	AtualizarBoleto(w http.ResponseWriter, r *http.Request)
 	GerarEEnviarRelatorioBoletos(w http.ResponseWriter, r *http.Request)
+	TotaisBoletos(w http.ResponseWriter, r *http.Request)
 }
 
 type boletoHandler struct {
@@ -266,4 +268,42 @@ func (h *boletoHandler) GerarEEnviarRelatorioBoletos(w http.ResponseWriter, r *h
 func writeJSON(w http.ResponseWriter, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
+}
+
+func (h *boletoHandler) TotaisBoletos(w http.ResponseWriter, r *http.Request) {
+	hoje := time.Now().Format("2006-01-02")
+
+	totalDia, err := h.service.TotalBoletosDia(hoje)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	totalAtrasados, err := h.service.TotalBoletosAtrasados()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	totalMesPendentes, err := h.service.TotalBoletosPendentesMesAtual()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	totalMesPagos, err := h.service.TotalBoletosPagosMesAtual()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]float64{
+		"pendentesHoje": totalDia,
+		"atrasados":     totalAtrasados,
+		"pendentesMes":  totalMesPendentes,
+		"pagosMes":      totalMesPagos,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

@@ -6,6 +6,7 @@ import (
 
 type FornecedorService interface {
 	CriarFornecedor(fornecedor *models.Fornecedor) error
+	EditarFornecedor(f *models.Fornecedor) error
 	ListarFornecedores(page int) ([]models.Fornecedor, error)
 	BuscarFornecedorPorCNPJouNome(valor string) ([]models.Fornecedor, error)
 	CriarPedidoFornecedor(pedido *models.PedidoFornecedor) error
@@ -26,6 +27,9 @@ func NovoFornecedorService(repo FornecedorRepository) FornecedorService {
 
 func (s *fornecedorService) CriarFornecedor(fornecedor *models.Fornecedor) error {
 	return s.repo.CriarFornecedor(fornecedor)
+}
+func (s *fornecedorService) EditarFornecedor(f *models.Fornecedor) error  {
+	return s.repo.EditarFornecedor(f)
 }
 
 func (s *fornecedorService) ListarFornecedores(page int) ([]models.Fornecedor, error) {

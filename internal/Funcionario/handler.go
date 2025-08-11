@@ -9,6 +9,7 @@ import (
 
 type FuncionarioHandler interface {
 	CriarFuncionario(w http.ResponseWriter, r *http.Request)
+	EditarFuncionario(w http.ResponseWriter, r *http.Request)
 	ListarFuncionarios(w http.ResponseWriter, r *http.Request)
 	BuscarFuncionarioPorCPF(w http.ResponseWriter, r *http.Request)
 	BuscarFuncionarioPorID(w http.ResponseWriter, r *http.Request)
@@ -46,6 +47,32 @@ func (h *funcionarioHandler) CriarFuncionario(w http.ResponseWriter, r *http.Req
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *funcionarioHandler) EditarFuncionario(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var funcionario models.Funcionario
+	response := models.ResponseDefaultModel{
+		IsSuccess: true,
+		Data:      funcionario,
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&funcionario); err != nil {
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = "Erro ao decodificar os dados do funcionário"
+		w.WriteHeader(http.StatusBadRequest)
+	} else if err := h.service.EditarFuncionario(&funcionario); err != nil {
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = err.Error()
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
 	json.NewEncoder(w).Encode(response)
 }
 

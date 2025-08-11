@@ -327,11 +327,11 @@ func ConverterLinhaDigitavelParaCodigoBarras(linha string) (string, error) {
 		return "", fmt.Errorf("linha digitável inválida: deve conter 47 dígitos")
 	}
 
-	codigoBarras := linha[0:4] + 
-		linha[32:33] + 
-		linha[33:47] + 
-		linha[4:9] + linha[10:20] + 
-		linha[21:31] 
+	codigoBarras := linha[0:4] +
+		linha[32:33] +
+		linha[33:47] +
+		linha[4:9] + linha[10:20] +
+		linha[21:31]
 
 	return codigoBarras, nil
 }
@@ -350,4 +350,64 @@ func (s *SQLStr) AtualizarStatusBoleto(id int, statusId int) error {
 		return fmt.Errorf("erro ao atualizar pagamento: %w", err)
 	}
 	return nil
+}
+
+func (r *SQLStr) TotalBoletosDia(data string) (float64, error) {
+	query := `
+        SELECT COALESCE(SUM(Valor), 0)
+        FROM BoletosRecebidos
+        WHERE StatusId = 1
+        AND DataVencimento = CONVERT(date, @Data)
+    `
+	var total float64
+	err := r.db.QueryRow(query, sql.Named("Data", data)).Scan(&total)
+	if err != nil {
+		return 0, fmt.Errorf("erro ao calcular total do dia: %w", err)
+	}
+	return total, nil
+}
+
+func (r *SQLStr) TotalBoletosAtrasados() (float64, error) {
+	query := `
+        SELECT COALESCE(SUM(Valor), 0)
+        FROM BoletosRecebidos
+        WHERE StatusId = 3
+    `
+	var total float64
+	err := r.db.QueryRow(query).Scan(&total)
+	if err != nil {
+		return 0, fmt.Errorf("erro ao calcular total atrasado: %w", err)
+	}
+	return total, nil
+}
+
+func (r *SQLStr) TotalBoletosPendentesMesAtual() (float64, error) {
+	query := `
+        SELECT COALESCE(SUM(Valor), 0)
+        FROM BoletosRecebidos
+        WHERE StatusId = 1
+        AND YEAR(DataVencimento) = YEAR(GETDATE())
+        AND MONTH(DataVencimento) = MONTH(GETDATE())
+    `
+	var total float64
+	err := r.db.QueryRow(query).Scan(&total)
+	if err != nil {
+		return 0, fmt.Errorf("erro ao calcular total pendente do mês: %w", err)
+	}
+	return total, nil 
+}
+func (r *SQLStr) TotalBoletosPagosMesAtual() (float64, error) {
+	query := `
+        SELECT COALESCE(SUM(Valor), 0)
+        FROM BoletosRecebidos
+        WHERE StatusId = 2 
+        AND YEAR(DataPagamento) = YEAR(GETDATE())
+        AND MONTH(DataPagamento) = MONTH(GETDATE())
+    `
+	var total float64
+	err := r.db.QueryRow(query).Scan(&total)
+	if err != nil {
+		return 0, fmt.Errorf("erro ao calcular total pago do mês: %w", err)
+	}
+	return total, nil
 }

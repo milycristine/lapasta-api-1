@@ -43,9 +43,16 @@ func GerarNotasMotoristasHandler(sqlConn *sql.SQLStr) http.HandlerFunc {
 		notasMap := make(map[int]*models.ExpedicaoNotaMotorista)
 		motoristaIndex := 0
 
+		processadas := make(map[string]bool)
+
 		for _, agrup := range resp.Retorno.Agrupamentos {
 			for _, expWrapper := range agrup.Expedicoes {
 				exp := expWrapper.Expedicao
+
+				if processadas[exp.Identificacao] {
+					continue
+				}
+				processadas[exp.Identificacao] = true
 
 				motorista := motoristas[motoristaIndex]
 				motoristaIndex = (motoristaIndex + 1) % len(motoristas)
@@ -75,7 +82,7 @@ func GerarNotasMotoristasHandler(sqlConn *sql.SQLStr) http.HandlerFunc {
 				emissao := models.EmissaoNota{
 					NumeroNota:         exp.Identificacao,
 					Valor:              parseDecimalString(exp.ValorDeclarado),
-					DataEmissao:        exp.DataEmissao,
+					DataEmissao:        formatarDataSQL(exp.DataEmissao),
 					Descricao:          "Expedição Tiny - Agrupamento " + agrup.IdAgrupamento,
 					MotoristaId:        motorista.Id,
 					MotoristaNome:      motorista.Nome,
@@ -97,11 +104,22 @@ func GerarNotasMotoristasHandler(sqlConn *sql.SQLStr) http.HandlerFunc {
 		json.NewEncoder(w).Encode(notas)
 	}
 }
+
 func parseDecimalString(value string) float64 {
-    clean := strings.ReplaceAll(value, ",", ".")
-    f, err := strconv.ParseFloat(clean, 64)
-    if err != nil {
-        return 0
-    }
-    return f
+	clean := strings.ReplaceAll(value, ",", ".")
+	f, err := strconv.ParseFloat(clean, 64)
+	if err != nil {
+		return 0
+	}
+	return f
+}
+
+func formatarDataSQL(data string) string {
+	layouts := []string{"02/01/2006", "02-01-2006"}
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, data); err == nil {
+			return t.Format("2006-01-02") 
+		}
+	}
+	return data 
 }

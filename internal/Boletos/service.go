@@ -14,7 +14,11 @@ type BoletoService interface {
 	ListarBoletosPagos() ([]models.Boleto, error)
 	ListarBoletosPendentes() ([]models.Boleto, error)
 	AtualizarStatusBoleto(id int, statusId int) error
-	GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int) error 
+	GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int) error
+	TotalBoletosDia(data string) (float64, error)
+	TotalBoletosAtrasados() (float64, error)
+	TotalBoletosPendentesMesAtual() (float64, error)
+	TotalBoletosPagosMesAtual() (float64, error)
 }
 
 type boletoService struct {
@@ -59,6 +63,18 @@ func (s *boletoService) ListarBoletosPendentes() ([]models.Boleto, error) {
 func (s *boletoService) AtualizarStatusBoleto(id int, statusId int) error {
 	return s.repo.AtualizarStatusBoleto(id, statusId)
 }
-func (s *boletoService) GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int)  error  {
-	return s.repo.GerarEEnviarRelatorioBoletos(emailAdmin, ano, mes , fornecedorID, statusIDs )
+func (s *boletoService) GerarEEnviarRelatorioBoletos(emailAdmin string, ano, mes int, fornecedorID *int, statusIDs []int) error {
+	return s.repo.GerarEEnviarRelatorioBoletos(emailAdmin, ano, mes, fornecedorID, statusIDs)
+}
+func (s *boletoService) TotalBoletosDia(data string) (float64, error) {
+	return s.repo.TotalBoletosDia(data)
+}
+func (s *boletoService) TotalBoletosAtrasados() (float64, error) {
+	return s.repo.TotalBoletosAtrasados()
+}
+func (s *boletoService) TotalBoletosPendentesMesAtual() (float64, error) {
+	return s.repo.TotalBoletosPendentesMesAtual()
+}
+func (s *boletoService) TotalBoletosPagosMesAtual() (float64, error) {
+	return s.repo.TotalBoletosPagosMesAtual()
 }

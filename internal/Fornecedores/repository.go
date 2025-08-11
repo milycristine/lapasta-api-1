@@ -7,6 +7,7 @@ import (
 
 type FornecedorRepository interface {
 	CriarFornecedor(fornecedor *models.Fornecedor) error
+	EditarFornecedor(f *models.Fornecedor) error
 	ListarFornecedores(page int) ([]models.Fornecedor, error)
 	BuscarFornecedorPorCNPJouNome(valor string) ([]models.Fornecedor, error)
 	CriarPedidoFornecedor(pedido *models.PedidoFornecedor) error
@@ -27,6 +28,9 @@ func NovoFornecedorRepository(db *database.SQLStr) FornecedorRepository {
 
 func (r *fornecedorRepository) CriarFornecedor(fornecedor *models.Fornecedor) error {
 	return r.db.CriarFornecedor(fornecedor)
+}
+func (r *fornecedorRepository) EditarFornecedor(f *models.Fornecedor) error  {
+	return r.db.EditarFornecedor(f)
 }
 
 func (r *fornecedorRepository) ListarFornecedores(page int) ([]models.Fornecedor, error) {
