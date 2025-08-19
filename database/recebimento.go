@@ -64,11 +64,11 @@ func (s *SQLStr) ListarRecebimentos(page int) ([]models.Recebimento, error) {
 		PF.Descricao AS Produto,
 		FORNE.Nome AS NomeFornecedor,
 		PF.PrazoAcordadoDias
-	FROM Recebimento R
-	JOIN Funcionarios F ON F.Id = R.IdResponsavel
-	JOIN Notas N ON N.Id = R.IdNota
-	JOIN PedidoFornecedor PF ON PF.Id = R.IdPedidoFornecedor
-	JOIN Fornecedores FORNE ON FORNE.Id = PF.FornecedorId
+	FROM Recebimento R WITH (NOLOCK)
+	JOIN Funcionarios F WITH (NOLOCK) ON F.Id = R.IdResponsavel
+	JOIN Notas N WITH (NOLOCK) ON N.Id = R.IdNota
+	JOIN PedidoFornecedor PF WITH (NOLOCK) ON PF.Id = R.IdPedidoFornecedor
+	JOIN Fornecedores FORNE WITH (NOLOCK) ON FORNE.Id = PF.FornecedorId
 	ORDER BY R.Dia DESC
 	OFFSET @Offset ROWS
 	FETCH NEXT @Limit ROWS ONLY
@@ -112,11 +112,11 @@ func (s *SQLStr) FiltrarDataRecebimentos(inicioData time.Time, fimData time.Time
 		PF.Descricao AS Produto,
 		FORNE.Nome AS NomeFornecedor,
 		PF.PrazoAcordadoDias
-	FROM Recebimento R
-	JOIN Funcionarios F ON F.Id = R.IdResponsavel
-	JOIN Notas N ON N.Id = R.IdNota
-	JOIN PedidoFornecedor PF ON PF.Id = R.IdPedidoFornecedor
-	JOIN Fornecedores FORNE ON FORNE.Id = PF.FornecedorId
+	FROM Recebimento R WITH (NOLOCK)
+	JOIN Funcionarios F WITH (NOLOCK) ON F.Id = R.IdResponsavel
+	JOIN Notas N WITH (NOLOCK) ON N.Id = R.IdNota
+	JOIN PedidoFornecedor PF WITH (NOLOCK) ON PF.Id = R.IdPedidoFornecedor
+	JOIN Fornecedores FORNE WITH (NOLOCK) ON FORNE.Id = PF.FornecedorId
 	WHERE 
 		R.Dia BETWEEN @InicioData AND @FimData
 	ORDER BY R.Dia DESC

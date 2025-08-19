@@ -152,8 +152,8 @@ func (s *SQLStr) ListarPontos(page int) ([]models.Ponto, error) {
 		SELECT 
 			p.Id, p.HManha, p.HAlmocoRetorno, p.HAlmocoSaida, p.HNoite, 
 			p.Dia, p.Situacao, p.IdFuncionario, f.Nome AS NomeFuncionario
-		FROM Ponto p
-		JOIN Funcionarios f ON p.IdFuncionario = f.Id
+		FROM Ponto p WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON p.IdFuncionario = f.Id
 		ORDER BY p.Dia DESC
 		OFFSET @Offset ROWS
 		FETCH NEXT @Limit ROWS ONLY
@@ -192,8 +192,8 @@ func (s *SQLStr) ListarPontosPorId(idFuncionario, page int) ([]models.Ponto, err
 		SELECT 
 			p.Id, p.HManha, p.HAlmocoRetorno, p.HAlmocoSaida, p.HNoite, 
 			p.Dia, p.Situacao, p.IdFuncionario, f.Nome AS NomeFuncionario
-		FROM Ponto p
-		JOIN Funcionarios f ON p.IdFuncionario = f.Id
+		FROM Ponto p WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON p.IdFuncionario = f.Id
 		WHERE p.IdFuncionario = @IdFuncionario
 		ORDER BY p.Dia DESC
 		OFFSET @Offset ROWS
@@ -234,8 +234,8 @@ func (s *SQLStr) ListarPontosPorIdEDia(idFuncionario int, dia string) (models.Po
 	query := `
 		SELECT p.Id, p.HManha, p.HAlmocoRetorno, p.HAlmocoSaida, p.HNoite, p.Dia, p.Situacao, p.IdFuncionario, 
 		       f.Nome AS NomeFuncionario, p.EntradaRegistrada, p.PausaRegistrada, p.RetornoRegistrado, p.SaidaRegistrada
-		FROM Ponto p
-		JOIN Funcionarios f ON p.IdFuncionario = f.Id
+		FROM Ponto p WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON p.IdFuncionario = f.Id
 		WHERE p.IdFuncionario = @IdFuncionario
 		AND p.Dia = @Dia
 		ORDER BY p.Dia DESC
@@ -271,8 +271,8 @@ func (s *SQLStr) ListarPontosPorData(startDate time.Time, endDate time.Time, pag
 	query := `
 		SELECT p.Id, p.HManha, p.HAlmocoRetorno, p.HAlmocoSaida, p.HNoite, p.Dia, p.Situacao, p.IdFuncionario, 
 		       f.Nome AS NomeFuncionario
-		FROM Ponto p
-		JOIN Funcionarios f ON p.IdFuncionario = f.Id
+		FROM Ponto p WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON p.IdFuncionario = f.Id
 		WHERE p.Dia BETWEEN @StartDate AND @EndDate
 		ORDER BY p.Dia DESC
 		OFFSET @Offset ROWS
@@ -315,8 +315,8 @@ func (s *SQLStr) ListarPontosPorDataId(idFuncionario int, startDate time.Time, e
 	query := `
 		SELECT p.Id, p.HManha, p.HAlmocoRetorno, p.HAlmocoSaida, p.HNoite, p.Dia, p.Situacao, p.IdFuncionario, 
 		       f.Nome AS NomeFuncionario
-		FROM Ponto p
-		JOIN Funcionarios f ON p.IdFuncionario = f.Id
+		FROM Ponto p WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON p.IdFuncionario = f.Id
 		WHERE p.IdFuncionario = @IdFuncionario
 		AND p.Dia BETWEEN @StartDate AND @EndDate
 		ORDER BY p.Dia DESC

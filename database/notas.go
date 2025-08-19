@@ -99,9 +99,9 @@ func (s *SQLStr) FiltrarDataNota(inicioData time.Time, fimData time.Time) ([]mod
 			n.Id, n.Tipo, n.Valor, n.IdFuncionario, n.Url_Imagem, n.Dia, n.Descricao,
 			n.NumeroNota, n.DataEmissao, n.IdFornecedor, n.IdPedidoFornecedor,
 			f.Nome AS NomeFuncionario, fo.Nome AS NomeFornecedor
-		FROM Notas n
-		JOIN Funcionarios f ON n.IdFuncionario = f.Id
-		LEFT JOIN Fornecedores fo ON n.IdFornecedor = fo.Id
+		FROM Notas n WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON n.IdFuncionario = f.Id
+		LEFT JOIN Fornecedores fo WITH (NOLOCK) ON n.IdFornecedor = fo.Id
 		WHERE n.Dia BETWEEN @InicioData AND @FimData
 		ORDER BY n.Dia DESC
 	`
@@ -139,9 +139,9 @@ func (s *SQLStr) BuscarNotasPorNumero(numero string) ([]models.Nota, error) {
 			n.Id, n.Tipo, n.Valor, n.IdFuncionario, n.Url_Imagem, n.Dia, n.Descricao,
 			n.NumeroNota, n.DataEmissao, n.IdFornecedor, n.IdPedidoFornecedor,
 			f.Nome AS NomeFuncionario, fo.Nome AS NomeFornecedor
-		FROM Notas n
-		JOIN Funcionarios f ON n.IdFuncionario = f.Id
-		LEFT JOIN Fornecedores fo ON n.IdFornecedor = fo.Id
+		FROM Notas n WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON n.IdFuncionario = f.Id
+		LEFT JOIN Fornecedores fo WITH (NOLOCK) ON n.IdFornecedor = fo.Id
 		WHERE n.NumeroNota LIKE @Numero
 		ORDER BY n.Dia DESC
 	`

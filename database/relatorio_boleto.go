@@ -24,13 +24,13 @@ func (r *SQLStr) ListarBoletosComFiltro(ano, mes int, fornecedorID *int, statusI
 			b.CodigoBarras,
 			b.StatusId
 		FROM 
-			BoletosRecebidos b
+			BoletosRecebidos b WITH (NOLOCK)
 		INNER JOIN 
-			Recebimento r ON r.Id = b.RecebimentoId
+			Recebimento r WITH (NOLOCK) ON r.Id = b.RecebimentoId
 		INNER JOIN 
-			PedidoFornecedor p ON p.Id = r.IdPedidoFornecedor
+			PedidoFornecedor p WITH (NOLOCK) ON p.Id = r.IdPedidoFornecedor
 		INNER JOIN 
-			Fornecedores f ON f.Id = p.FornecedorId
+			Fornecedores f WITH (NOLOCK) ON f.Id = p.FornecedorId
 		WHERE 
 			YEAR(b.DataVencimento) = @Ano AND MONTH(b.DataVencimento) = @Mes
 	`
@@ -126,7 +126,6 @@ func gerarRelatorioPDF(boletos []models.BoletoRelatorio, statusIDs []int) ([]byt
 		total += b.Valor
 	}
 
-	// Determina o título do total com base nos statusIDs
 	statusLabel := "Geral"
 	if len(statusIDs) == 1 {
 		switch statusIDs[0] {
@@ -156,8 +155,8 @@ func gerarRelatorioPDF(boletos []models.BoletoRelatorio, statusIDs []int) ([]byt
 func (s *SQLStr) enviarEmailComAnexoPDF(emailAdmin string, fileContent []byte, mes, ano int) error {
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
-	senderEmail := "emilycristinee21@gmail.com"
-	senderPassword := "sapb jvda qxzj dguk"
+	senderEmail := "email"
+	senderPassword := "senha"
 	subject := fmt.Sprintf("Relatório Mensal de Boletos - %02d/%d", mes, ano)
 	body := fmt.Sprintf("Olá, em anexo está o relatório mensal de boletos do mês %02d do ano %d.", mes, ano)
 

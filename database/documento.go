@@ -51,8 +51,8 @@ func (s *SQLStr) ListarDocumentos(page int) ([]models.Documento, error) {
 	query := `
         SELECT d.Id, d.Titulo, d.Url, d.Data_Criacao, d.IdFuncionario, 
                f.Nome AS NomeResponsavel, d.Descricao
-        FROM Documentos d
-        JOIN Funcionarios f ON d.IdFuncionario = f.Id
+        FROM Documentos d WITH (NOLOCK)
+        JOIN Funcionarios f WITH (NOLOCK) ON d.IdFuncionario = f.Id
         ORDER BY d.Data_Criacao DESC
         OFFSET @Offset ROWS
         FETCH NEXT @Limit ROWS ONLY
@@ -85,8 +85,8 @@ func (s *SQLStr) FiltrarDataDocumento(inicioData time.Time, fimData time.Time) (
 	query := `
 		SELECT d.Id, d.Titulo, d.Url, d.Data_Criacao, d.IdFuncionario, 
 		       f.Nome AS NomeResponsavel, d.Descricao
-		FROM Documentos d
-		JOIN Funcionarios f ON d.IdFuncionario = f.Id
+		FROM Documentos d WITH (NOLOCK)
+		JOIN Funcionarios f WITH (NOLOCK) ON d.IdFuncionario = f.Id
 		WHERE 
 		d.Data_Criacao BETWEEN @InicioData AND @FimData
 		ORDER BY d.Data_Criacao DESC

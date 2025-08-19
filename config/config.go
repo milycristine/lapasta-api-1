@@ -28,7 +28,6 @@ type Config struct {
 }
 
 var Yml Config
-// LoadConfig carrega a configuração do arquivo config.yaml.
 func LoadConfig() error {
     path := os.Getenv("CONFIG_PATH")
     if path == "" {

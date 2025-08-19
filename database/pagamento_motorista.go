@@ -141,8 +141,8 @@ func (s *SQLStr) ListarPagamentosMotorista(idMotorista int) ([]models.Pagamentos
 			p.IdStatusPagamento,
 			m.Nome,
 			m.ChavePix
-		FROM PagamentosMotorista p
-		INNER JOIN Motoristas m ON p.IdMotorista = m.Id
+		FROM PagamentosMotorista p WITH (NOLOCK) 
+		INNER JOIN Motoristas m WITH (NOLOCK) ON p.IdMotorista = m.Id
 	`
 	var args []any
 

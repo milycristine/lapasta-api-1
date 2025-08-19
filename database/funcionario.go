@@ -272,7 +272,6 @@ func (r *SQLStr) EditarFuncionario(funcionario *models.Funcionario) error {
 		return fmt.Errorf("erro ao atualizar funcionário: %w", err)
 	}
 
-	// Atualiza senha, se necessário
 	if funcionario.Senha != "" {
 		hashedPassword := sha256.Sum256([]byte(funcionario.Senha))
 
