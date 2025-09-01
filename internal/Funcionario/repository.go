@@ -11,6 +11,7 @@ type FuncionarioRepository interface {
 	ListarFuncionarios(page int) ([]models.Funcionario, error)
 	BuscarFuncionarioPorCPF(cpf string) (*models.FuncionarioComPontos, error)
 	BuscarFuncionarioPorID(id int) (*models.Funcionario, error)
+	AtualizarStatusFuncionario(id int, status bool) error
 }
 
 type funcionarioRepository struct {
@@ -37,6 +38,9 @@ func (r *funcionarioRepository) ListarFuncionarios(page int) ([]models.Funcionar
 func (r *funcionarioRepository) BuscarFuncionarioPorID(id int) (*models.Funcionario, error) {
 	return r.db.BuscarFuncionarioPorID(id)
 }
+func (r *funcionarioRepository) AtualizarStatusFuncionario(id int, status bool)  error {
+	return r.db.AtualizarStatusFuncionario(id, status)
+}
 
 func (r *funcionarioRepository) BuscarFuncionarioPorCPF(cpf string) (*models.FuncionarioComPontos, error) {
 	funcionarioComPontos, err := r.db.BuscarFuncionarioPorCPF(cpf)
@@ -45,3 +49,4 @@ func (r *funcionarioRepository) BuscarFuncionarioPorCPF(cpf string) (*models.Fun
 	}
 	return &funcionarioComPontos, nil
 }
+

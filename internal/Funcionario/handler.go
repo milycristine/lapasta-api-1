@@ -3,6 +3,7 @@ package funcionario
 import (
 	"encoding/json"
 	"lapasta/internal/models"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -13,6 +14,7 @@ type FuncionarioHandler interface {
 	ListarFuncionarios(w http.ResponseWriter, r *http.Request)
 	BuscarFuncionarioPorCPF(w http.ResponseWriter, r *http.Request)
 	BuscarFuncionarioPorID(w http.ResponseWriter, r *http.Request)
+	AtualizarStatusFuncionario(w http.ResponseWriter, r *http.Request)
 }
 
 type funcionarioHandler struct {
@@ -170,5 +172,42 @@ func (h *funcionarioHandler) BuscarFuncionarioPorID(w http.ResponseWriter, r *ht
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *funcionarioHandler) AtualizarStatusFuncionario(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Query().Get("id")
+	statusStr := r.URL.Query().Get("status")
+
+	var response models.ResponseDefaultModel
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || (statusStr != "true" && statusStr != "false") {
+		response.IsSuccess = false
+		response.ErrorMessage = "Parâmetros inválidos (use ?id=1&status=true/false)"
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	status := statusStr == "true"
+
+	err = h.service.AtualizarStatusFuncionario(id, status)
+	if err != nil {
+		log.Println("Erro ao atualizar status do funcionario:", err)
+		response.IsSuccess = false
+		response.ErrorMessage = "Erro ao atualizar status do funcionario"
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		response.IsSuccess = true
+		response.Data = map[string]interface{}{
+			"id":     id,
+			"status": status,
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }

@@ -241,11 +241,11 @@ func (r *SQLStr) EditarFuncionario(funcionario *models.Funcionario) error {
 		setClauses = append(setClauses, "Salario = @Salario")
 		args = append(args, sql.Named("Salario", *funcionario.Salario))
 	}
-	if funcionario.Admin != -1 { 
+	if funcionario.Admin != -1 {
 		setClauses = append(setClauses, "Admin = @Admin")
 		args = append(args, sql.Named("Admin", funcionario.Admin))
 	}
-	if funcionario.Status != -1 { 
+	if funcionario.Status != -1 {
 		setClauses = append(setClauses, "Status = @Status")
 		args = append(args, sql.Named("Status", funcionario.Status))
 	}
@@ -296,5 +296,22 @@ func (r *SQLStr) EditarFuncionario(funcionario *models.Funcionario) error {
 		return fmt.Errorf("erro ao finalizar transação: %w", err)
 	}
 
+	return nil
+}
+func (s *SQLStr) AtualizarStatusFuncionario(id int, status bool) error {
+	sint := 0
+	if status {
+		sint = 1
+	}
+
+	query := `UPDATE Funcionarios SET Status = @Status WHERE Id = @Id`
+	_, err := s.db.Exec(query,
+		sql.Named("Status", sint),
+		sql.Named("Id", id),
+	)
+
+	if err != nil {
+		return fmt.Errorf("erro ao atualizar status do funcionário: %w", err)
+	}
 	return nil
 }

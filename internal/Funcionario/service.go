@@ -9,9 +9,8 @@ type FuncionarioService interface {
 	EditarFuncionario(funcionario *models.Funcionario) error
 	ListarFuncionarios(page int) ([]models.Funcionario, error)
 	BuscarFuncionarioPorCPF(cpf string) (*models.FuncionarioComPontos, error)
-	BuscarFuncionarioPorID(id int) (*models.Funcionario, error) 
-
-
+	BuscarFuncionarioPorID(id int) (*models.Funcionario, error)
+	AtualizarStatusFuncionario(id int, status bool) error
 }
 
 type funcionarioService struct {
@@ -28,15 +27,18 @@ func (s *funcionarioService) CriarFuncionario(funcionario *models.Funcionario) e
 	return s.repo.CriarFuncionario(funcionario)
 }
 
-func (s *funcionarioService) EditarFuncionario( funcionario *models.Funcionario)	error  {
+func (s *funcionarioService) EditarFuncionario(funcionario *models.Funcionario) error {
 	return s.repo.EditarFuncionario(funcionario)
 }
 
 func (s *funcionarioService) ListarFuncionarios(page int) ([]models.Funcionario, error) {
 	return s.repo.ListarFuncionarios(page)
 }
-func (s *funcionarioService) BuscarFuncionarioPorID(id int) (*models.Funcionario, error)  {
+func (s *funcionarioService) BuscarFuncionarioPorID(id int) (*models.Funcionario, error) {
 	return s.repo.BuscarFuncionarioPorID(id)
+}
+func (s *funcionarioService) AtualizarStatusFuncionario(id int, status bool) error {
+	return s.repo.AtualizarStatusFuncionario(id, status)
 }
 
 func (s *funcionarioService) BuscarFuncionarioPorCPF(cpf string) (*models.FuncionarioComPontos, error) {

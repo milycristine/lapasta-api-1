@@ -111,6 +111,7 @@ func Controllers() {
 	http.HandleFunc("/listarFuncionario", funcionarioHandler.ListarFuncionarios)
 	http.HandleFunc("/buscarFuncionario", funcionarioHandler.BuscarFuncionarioPorCPF)
 	http.HandleFunc("/buscarFuncionarioPorId", funcionarioHandler.BuscarFuncionarioPorID)
+	http.HandleFunc("/statusFuncionario", funcionarioHandler.AtualizarStatusFuncionario)
 
 	http.HandleFunc("/fornecedores", fornecedorHandler.CriarFornecedor)
 	http.HandleFunc("/editarFornecedores", fornecedorHandler.EditarFornecedor)
@@ -129,10 +130,10 @@ func Controllers() {
 	http.HandleFunc("/boletoVencidos", boletoHandler.ListarBoletosVencidos)
 	http.HandleFunc("/boletoPendentes", boletoHandler.ListarBoletosPendentes)
 	http.HandleFunc("/atualizarStatusBoleto", boletoHandler.AtualizarBoleto)
-	http.HandleFunc("/gerarRelatorio", boletoHandler.GerarEEnviarRelatorioBoletos)	
+	http.HandleFunc("/gerarRelatorio", boletoHandler.GerarEEnviarRelatorioBoletos)
 	http.HandleFunc("/boletostotais", boletoHandler.TotaisBoletos)
 
-	http.HandleFunc("/motorista", motoristaHandler.CriarMotorista)	
+	http.HandleFunc("/motorista", motoristaHandler.CriarMotorista)
 	http.HandleFunc("/editarMotorista", motoristaHandler.EditarMotorista)
 	http.HandleFunc("/statusmotorista", motoristaHandler.AtualizarStatusMotorista)
 	http.HandleFunc("/listarMotoristas", motoristaHandler.ListarMotoristas)
