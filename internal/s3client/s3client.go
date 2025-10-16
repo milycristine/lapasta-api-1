@@ -49,7 +49,6 @@ func (c *S3Client) UploadBase64File(fileBytes []byte) (string, error) {
 		return "", fmt.Errorf("extensão de arquivo inválida")
 	}
 
-	// Enviar o arquivo para o S3
 	_, err := c.s3Session.PutObject(&s3.PutObjectInput{
 		Bucket:             aws.String(c.bucket),
 		Key:                aws.String(fileName),
@@ -62,7 +61,6 @@ func (c *S3Client) UploadBase64File(fileBytes []byte) (string, error) {
 		return "", fmt.Errorf("erro ao enviar o arquivo ao S3: %w", err)
 	}
 
-	// Gerar a URL pública do arquivo
 	url := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", c.bucket, fileName)
 
 	return url, nil

@@ -6,7 +6,7 @@ import (
 )
 
 type NotaService interface {
-	CriarNota(nota *models.Nota) error
+	CriarNota(nota *models.Nota) (int, error)
 	ListarNotas(page int) ([]models.Nota, error)
 	FiltrarDataNota(inicioData, fimData time.Time) ([]models.Nota, error)
 	BuscarNotasPorNumero(numero string) ([]models.Nota, error)
@@ -22,7 +22,7 @@ func NovaNotaService(repo NotaRepository) NotaService {
 	}
 }
 
-func (s *notaService) CriarNota(nota *models.Nota) error {
+func (s *notaService) CriarNota(nota *models.Nota) (int, error) {
 	return s.repo.CriarNota(nota)
 }
 

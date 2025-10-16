@@ -11,28 +11,18 @@ import (
 
 func (r *SQLStr) CriarBoletoRecebido(b *models.Boleto) error {
 	var receb models.Recebimento
+
 	queryReceb := `
-		SELECT Id, IdPedidoFornecedor, Dia	
+		SELECT Id, Dia, Valor, Vencimento
 		FROM Recebimento WITH (NOLOCK)
 		WHERE Id = @RecebimentoId
 	`
-	err := r.db.QueryRow(queryReceb, sql.Named("RecebimentoId", b.RecebimentoId)).
-		Scan(&receb.Id, &receb.IdPedidoFornecedor, &receb.Dia)
+	err := r.db.QueryRow(queryReceb,
+		sql.Named("RecebimentoId", b.RecebimentoId),
+	).Scan(&receb.Id, &receb.Dia, &receb.Valor, &receb.Vencimento)
 	if err != nil {
 		log.Printf("Erro ao buscar recebimento: %v", err)
 		return fmt.Errorf("erro ao buscar recebimento: %w", err)
-	}
-
-	var prazoAcordado int
-	queryPedido := `
-		SELECT PrazoAcordadoDias
-		FROM PedidoFornecedor 
-		WHERE Id = @PedidoId
-	`
-	err = r.db.QueryRow(queryPedido, sql.Named("PedidoId", receb.IdPedidoFornecedor)).Scan(&prazoAcordado)
-	if err != nil {
-		log.Printf("Erro ao buscar pedido fornecedor: %v", err)
-		return fmt.Errorf("erro ao buscar pedido fornecedor: %w", err)
 	}
 
 	codigo := b.CodigoBarras
@@ -79,7 +69,6 @@ func (r *SQLStr) CriarBoletoRecebido(b *models.Boleto) error {
 		sql.Named("StatusId", 1),
 		sql.Named("DataPagamento", b.DataPagamento),
 	)
-
 	if err != nil {
 		log.Printf("Erro ao inserir boleto recebido: %v", err)
 		return fmt.Errorf("erro ao inserir boleto recebido: %w", err)
@@ -113,16 +102,16 @@ func (r *SQLStr) ListarBoletosPorFornecedor(fornecedorId int) ([]models.Boleto, 
 	}
 	return boletos, nil
 }
-func (r *SQLStr) ListarBoletosPorPedido(pedidoId int) ([]models.Boleto, error) {
+
+func (r *SQLStr) ListarBoletosPorRecebimento(recebimentoId int) ([]models.Boleto, error) {
 	query := `
 		SELECT b.Id, b.RecebimentoId, b.CodigoBarras, b.DataCadastro, b.DataVencimento, b.Valor, b.StatusId, b.DataPagamento
 		FROM BoletosRecebidos b
-		INNER JOIN Recebimento r ON r.Id = b.RecebimentoId
-		WHERE r.IdPedidoFornecedor = @PedidoId
-		`
-	rows, err := r.db.Query(query, sql.Named("PedidoId", pedidoId))
+		WHERE b.RecebimentoId = @RecebimentoId
+	`
+	rows, err := r.db.Query(query, sql.Named("RecebimentoId", recebimentoId))
 	if err != nil {
-		return nil, fmt.Errorf("erro ao listar boletos por pedido: %w", err)
+		return nil, fmt.Errorf("erro ao listar boletos por recebimento: %w", err)
 	}
 	defer rows.Close()
 
@@ -137,26 +126,14 @@ func (r *SQLStr) ListarBoletosPorPedido(pedidoId int) ([]models.Boleto, error) {
 	}
 	return boletos, nil
 }
+
 func (r *SQLStr) ListarBoletosDoDia(data string) ([]models.Boleto, error) {
 	query := `
-		SELECT 
-			b.Id,
-			f.Nome, 
-			b.Valor, 
-			b.DataVencimento, 
-			b.CodigoBarras, 
-			b.StatusId
-		FROM 
-			BoletosRecebidos b
-		INNER JOIN 
-			Recebimento r ON r.Id = b.RecebimentoId
-		INNER JOIN 
-			PedidoFornecedor p ON p.Id = r.IdPedidoFornecedor
-		INNER JOIN 
-			Fornecedores f ON f.Id = p.FornecedorId
-		WHERE 
-			b.DataVencimento <= @DataHoje
-	`
+	SELECT b.Id, b.RecebimentoId, b.CodigoBarras, b.DataVencimento, b.Valor, b.StatusId
+	FROM BoletosRecebidos b
+	INNER JOIN Recebimento r ON r.Id = b.RecebimentoId
+	WHERE CONVERT(date, b.DataVencimento) = @DataHoje
+`
 
 	dataHoje, err := time.Parse("2006-01-02", data)
 	if err != nil {
@@ -177,14 +154,17 @@ func (r *SQLStr) ListarBoletosDoDia(data string) ([]models.Boleto, error) {
 		var statusId int
 		var dataVencimentoStr string
 
-		err := rows.Scan(&boleto.Id, &boleto.FornecedorNome, &boleto.Valor, &dataVencimentoStr, &boleto.CodigoBarras, &statusId)
+		err := rows.Scan(&boleto.Id, &boleto.RecebimentoId, &boleto.CodigoBarras, &dataVencimentoStr, &boleto.Valor, &statusId)
 		if err != nil {
 			return nil, err
 		}
 
-		dataVencimento, err := time.Parse("2006-01-02", dataVencimentoStr)
+		dataVencimento, err := time.Parse(time.RFC3339, dataVencimentoStr)
 		if err != nil {
-			return nil, fmt.Errorf("erro ao converter data de vencimento: %w", err)
+			dataVencimento, err = time.Parse("2006-01-02", dataVencimentoStr)
+			if err != nil {
+				return nil, fmt.Errorf("erro ao converter data de vencimento: %w", err)
+			}
 		}
 
 		boleto.DataVencimento = dataVencimento.Format("2006-01-02")
@@ -206,10 +186,12 @@ func (r *SQLStr) ListarBoletosDoDia(data string) ([]models.Boleto, error) {
 }
 
 func (r *SQLStr) PagarBoleto(codigoBarras string) error {
-	query := `
+	query := `	
 		UPDATE BoletosRecebidos
 		SET StatusId = 2, DataPagamento = CURRENT_TIMESTAMP
-		WHERE CodigoBarras = @CodigoBarras AND StatusId <> 2 AND DataVencimento <= CONVERT(date, GETDATE())
+		WHERE CodigoBarras = @CodigoBarras 
+		  AND StatusId <> 2 
+		  AND DataVencimento = CONVERT(date, GETDATE())
 	`
 	result, err := r.db.Exec(query, sql.Named("CodigoBarras", codigoBarras))
 	if err != nil {
@@ -221,15 +203,15 @@ func (r *SQLStr) PagarBoleto(codigoBarras string) error {
 		return fmt.Errorf("erro ao verificar atualização: %w", err)
 	}
 	if rowsAffected == 0 {
-		return fmt.Errorf("boleto já pago, vencimento futuro ou não encontrado")
+		return fmt.Errorf("boleto já pago, vencimento diferente de hoje ou não encontrado")
 	}
 
 	_, err = r.db.Exec(`
-		INSERT INTO PagamentosLog (CodigoBarras, DataHora) 
-		VALUES (@CodigoBarras, CURRENT_TIMESTAMP)
-	`, sql.Named("CodigoBarras", codigoBarras))
+    INSERT INTO PagamentosLog (CodigoBarras, DataHora) 
+    VALUES (@CodigoBarras, CURRENT_TIMESTAMP)
+`, sql.Named("CodigoBarras", codigoBarras))
 	if err != nil {
-		return fmt.Errorf("erro ao registrar log de pagamento: %w", err)
+		log.Printf("Erro ao registrar log de pagamento do boleto %s: %v", codigoBarras, err)
 	}
 
 	return nil
@@ -237,13 +219,22 @@ func (r *SQLStr) PagarBoleto(codigoBarras string) error {
 
 func (r *SQLStr) ListarBoletosPagos() ([]models.Boleto, error) {
 	query := `
-		SELECT f.Nome, b.Valor, b.DataVencimento, b.DataPagamento, b.CodigoBarras, b.StatusId
-		FROM BoletosRecebidos b
-		INNER JOIN Recebimento r ON r.Id = b.RecebimentoId
-		INNER JOIN PedidoFornecedor p ON p.Id = r.IdPedidoFornecedor
-		INNER JOIN Fornecedores f ON f.Id = p.FornecedorId
-		WHERE b.StatusId = 2
-		ORDER BY b.DataPagamento DESC
+		SELECT 
+			b.Id,
+			b.Valor, 
+			b.DataVencimento, 
+			b.DataPagamento, 
+			b.CodigoBarras, 
+			b.StatusId,
+			r.Dia
+		FROM 
+			BoletosRecebidos b
+		INNER JOIN 
+			Recebimento r ON r.Id = b.RecebimentoId
+		WHERE 
+			b.StatusId = 2
+		ORDER BY 
+			b.DataPagamento DESC
 	`
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -254,10 +245,31 @@ func (r *SQLStr) ListarBoletosPagos() ([]models.Boleto, error) {
 	var boletos []models.Boleto
 	for rows.Next() {
 		var b models.Boleto
-		err := rows.Scan(&b.FornecedorNome, &b.Valor, &b.DataVencimento, &b.DataPagamento, &b.CodigoBarras, &b.StatusId)
+		var dataVencimentoStr, dataPagamentoStr, diaStr sql.NullString
+
+		err := rows.Scan(
+			&b.Id,
+			&b.Valor,
+			&dataVencimentoStr,
+			&dataPagamentoStr,
+			&b.CodigoBarras,
+			&b.StatusId,
+			&diaStr,
+		)
 		if err != nil {
 			return nil, err
 		}
+
+		if dataVencimentoStr.Valid {
+			b.DataVencimento = dataVencimentoStr.String
+		}
+		if dataPagamentoStr.Valid {
+			b.DataPagamento = &dataPagamentoStr.String
+		}
+		if diaStr.Valid {
+			b.DataCadastro = diaStr.String
+		}
+
 		boletos = append(boletos, b)
 	}
 	return boletos, nil
@@ -265,13 +277,21 @@ func (r *SQLStr) ListarBoletosPagos() ([]models.Boleto, error) {
 
 func (r *SQLStr) ListarBoletosVencidos() ([]models.Boleto, error) {
 	query := `
-		SELECT f.Nome, b.Valor, b.DataVencimento, b.CodigoBarras, b.StatusId
-		FROM BoletosRecebidos b
-		INNER JOIN Recebimento r ON r.Id = b.RecebimentoId
-		INNER JOIN PedidoFornecedor p ON p.Id = r.IdPedidoFornecedor
-		INNER JOIN Fornecedores f ON f.Id = p.FornecedorId
-		WHERE b.StatusId = 3
-		ORDER BY b.DataVencimento
+		SELECT 
+			b.Id,
+			b.Valor, 
+			b.DataVencimento, 
+			b.CodigoBarras, 
+			b.StatusId,
+			r.Dia
+		FROM 
+			BoletosRecebidos b
+		INNER JOIN 
+			Recebimento r ON r.Id = b.RecebimentoId
+		WHERE 
+			b.StatusId = 3
+		ORDER BY 
+			b.DataVencimento
 	`
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -282,10 +302,15 @@ func (r *SQLStr) ListarBoletosVencidos() ([]models.Boleto, error) {
 	var boletos []models.Boleto
 	for rows.Next() {
 		var b models.Boleto
-		err := rows.Scan(&b.FornecedorNome, &b.Valor, &b.DataVencimento, &b.CodigoBarras, &b.StatusId)
+		var dataVencimentoStr, diaStr string
+
+		err := rows.Scan(&b.Id, &b.Valor, &dataVencimentoStr, &b.CodigoBarras, &b.StatusId, &diaStr)
 		if err != nil {
 			return nil, err
 		}
+
+		b.DataVencimento = dataVencimentoStr
+		b.DataCadastro = diaStr
 		boletos = append(boletos, b)
 	}
 	return boletos, nil
@@ -293,13 +318,21 @@ func (r *SQLStr) ListarBoletosVencidos() ([]models.Boleto, error) {
 
 func (r *SQLStr) ListarBoletosPendentes() ([]models.Boleto, error) {
 	query := `
-		SELECT f.Nome, b.Valor, b.DataVencimento, b.CodigoBarras, b.StatusId
-		FROM BoletosRecebidos b
-		INNER JOIN Recebimento r ON r.Id = b.RecebimentoId
-		INNER JOIN PedidoFornecedor p ON p.Id = r.IdPedidoFornecedor
-		INNER JOIN Fornecedores f ON f.Id = p.FornecedorId
-		WHERE b.StatusId = 1
-		ORDER BY b.DataVencimento
+		SELECT 
+			b.Id,
+			b.Valor, 
+			b.DataVencimento, 
+			b.CodigoBarras, 
+			b.StatusId,
+			r.Dia
+		FROM 
+			BoletosRecebidos b
+		INNER JOIN 
+			Recebimento r ON r.Id = b.RecebimentoId
+		WHERE 
+			b.StatusId = 1
+		ORDER BY 
+			b.DataVencimento
 	`
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -310,10 +343,15 @@ func (r *SQLStr) ListarBoletosPendentes() ([]models.Boleto, error) {
 	var boletos []models.Boleto
 	for rows.Next() {
 		var b models.Boleto
-		err := rows.Scan(&b.FornecedorNome, &b.Valor, &b.DataVencimento, &b.CodigoBarras, &b.StatusId)
+		var dataVencimentoStr, diaStr string
+
+		err := rows.Scan(&b.Id, &b.Valor, &dataVencimentoStr, &b.CodigoBarras, &b.StatusId, &diaStr)
 		if err != nil {
 			return nil, err
 		}
+
+		b.DataVencimento = dataVencimentoStr
+		b.DataCadastro = diaStr
 		boletos = append(boletos, b)
 	}
 	return boletos, nil
@@ -394,7 +432,7 @@ func (r *SQLStr) TotalBoletosPendentesMesAtual() (float64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("erro ao calcular total pendente do mês: %w", err)
 	}
-	return total, nil 
+	return total, nil
 }
 func (r *SQLStr) TotalBoletosPagosMesAtual() (float64, error) {
 	query := `

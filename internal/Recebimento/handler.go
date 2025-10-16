@@ -1,14 +1,15 @@
 package recebimento
 
 import (
-	"encoding/base64"
+	//"encoding/base64"
 	"encoding/json"
-	Utils "lapasta/internal/Utils"
+	//Utils "lapasta/internal/Utils"
 	"lapasta/internal/models"
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
+
+	//"strings"
 	"time"
 )
 
@@ -60,34 +61,34 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	base64String := recebimento.ImagemBase64
-	if idx := strings.Index(base64String, ","); idx != -1 {
-		base64String = base64String[idx+1:]
-	}
-
-	fileBytes, err := base64.StdEncoding.DecodeString(base64String)
-	if err != nil {
-		log.Println("Erro ao decodificar base64:", err)
-		response.IsSuccess = false
-		response.ErrorMessage = "Erro ao decodificar a imagem base64"
-		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-	extensao := ".png"
-	nomeImagem := Utils.GerarStringAleatoria(12) + extensao
-	urlImagem, err := Utils.UploadImagemFirebase(fileBytes, nomeImagem, "recebimentos")
-	if err != nil {
-		log.Println("Erro ao salvar imagem local:", err)
-		response.IsSuccess = false
-		response.ErrorMessage = "Erro ao salvar imagem local"
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-	recebimento.UrlImagem = urlImagem
+	//base64String := recebimento.ImagemBase64
+	//if idx := strings.Index(base64String, ","); idx != -1 {
+	//	base64String = base64String[idx+1:]
+	//}
+	//
+	//fileBytes, err := base64.StdEncoding.DecodeString(base64String)
+	//if err != nil {
+	//	log.Println("Erro ao decodificar base64:", err)
+	//	response.IsSuccess = false
+	//	response.ErrorMessage = "Erro ao decodificar a imagem base64"
+	//	w.WriteHeader(http.StatusBadRequest)
+	//	w.Header().Set("Content-Type", "application/json")
+	//	json.NewEncoder(w).Encode(response)
+	//	return
+	//}
+	//extensao := ".png"
+	//nomeImagem := Utils.GerarStringAleatoria(12) + extensao
+	//urlImagem, err := Utils.UploadImagemFirebase(fileBytes, nomeImagem, "recebimentos")
+	//if err != nil {
+	//	log.Println("Erro ao salvar imagem local:", err)
+	//	response.IsSuccess = false
+	//	response.ErrorMessage = "Erro ao salvar imagem local"
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	w.Header().Set("Content-Type", "application/json")
+	//	json.NewEncoder(w).Encode(response)
+	//	return
+	//}
+	//recebimento.UrlImagem = urlImagem
 
 	if err := h.service.CriarRecebimento(&recebimento); err != nil {
 		log.Println(err)
@@ -99,7 +100,6 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-
 	response.Data = recebimento
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
@@ -174,7 +174,7 @@ func (h *RecebimentoHandler) FiltrarDataRecebimentos(w http.ResponseWriter, r *h
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response)
-		return
+		return	
 	}
 
 	response := models.ResponseDefaultModel{

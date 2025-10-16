@@ -7,7 +7,7 @@ import (
 type BoletoService interface {
 	CriarBoleto(boleto *models.Boleto) error
 	ListarBoletosPorFornecedor(fornecedorId int) ([]models.Boleto, error)
-	ListarBoletosPorPedido(pedidoId int) ([]models.Boleto, error)
+	ListarBoletosPorRecebimento(recebimentoId int) ([]models.Boleto, error)
 	ListarBoletosDoDia(data string) ([]models.Boleto, error)
 	PagarBoleto(codigoBarras string) error
 	ListarBoletosVencidos() ([]models.Boleto, error)
@@ -39,8 +39,8 @@ func (s *boletoService) ListarBoletosPorFornecedor(fornecedorId int) ([]models.B
 	return s.repo.ListarBoletosPorFornecedor(fornecedorId)
 }
 
-func (s *boletoService) ListarBoletosPorPedido(pedidoId int) ([]models.Boleto, error) {
-	return s.repo.ListarBoletosPorPedido(pedidoId)
+func (s *boletoService) ListarBoletosPorRecebimento(recebimentoId int) ([]models.Boleto, error) {
+	return s.repo.ListarBoletosPorRecebimento(recebimentoId)
 }
 
 func (s *boletoService) ListarBoletosDoDia(data string) ([]models.Boleto, error) {

@@ -68,8 +68,6 @@ func (h *PontoHandler) ListarPontosPorId(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "idFuncionario inválido", http.StatusBadRequest)
 		return
 	}
-
-	// Obter o número da página a partir da query string, com padrão 1
 	pageStr := r.URL.Query().Get("page")
 	page := 1
 	if pageStr != "" {
@@ -79,8 +77,6 @@ func (h *PontoHandler) ListarPontosPorId(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	}
-
-	// Chamar o serviço com paginação
 	pontos, err := h.service.ListarPontosPorId(idFuncionarioInt, page)
 	response := models.ResponseDefaultModel{
 		IsSuccess: true,

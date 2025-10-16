@@ -7,7 +7,7 @@ import (
 )
 
 type NotaRepository interface {
-	CriarNota(nota *models.Nota) error
+	CriarNota(nota *models.Nota) (int, error)
 	ListarNotas(page int) ([]models.Nota, error)
 	FiltrarDataNota(inicioData, fimData time.Time) ([]models.Nota, error)
 	BuscarNotasPorNumero(numero string) ([]models.Nota, error)
@@ -23,7 +23,7 @@ func NovoNotaRepository(db *database.SQLStr) NotaRepository {
 	}
 }
 
-func (r *notaRepository) CriarNota(nota *models.Nota) error {
+func (r *notaRepository) CriarNota(nota *models.Nota) (int, error) {
 	return r.db.CriarNota(nota)
 }
 

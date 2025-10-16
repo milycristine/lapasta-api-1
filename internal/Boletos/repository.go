@@ -8,7 +8,7 @@ import (
 type BoletoRepository interface {
 	CriarBoleto(boleto *models.Boleto) error
 	ListarBoletosPorFornecedor(fornecedorId int) ([]models.Boleto, error)
-	ListarBoletosPorPedido(pedidoId int) ([]models.Boleto, error)
+	ListarBoletosPorRecebimento(recebimentoId int) ([]models.Boleto, error)
 	ListarBoletosDoDia(data string) ([]models.Boleto, error)
 	PagarBoleto(codigoBarras string) error
 	ListarBoletosVencidos() ([]models.Boleto, error)
@@ -40,8 +40,8 @@ func (r *boletoRepository) ListarBoletosPorFornecedor(fornecedorId int) ([]model
 	return r.db.ListarBoletosPorFornecedor(fornecedorId)
 }
 
-func (r *boletoRepository) ListarBoletosPorPedido(pedidoId int) ([]models.Boleto, error) {
-	return r.db.ListarBoletosPorPedido(pedidoId)
+func (r *boletoRepository) ListarBoletosPorRecebimento(recebimentoId int) ([]models.Boleto, error) {
+	return r.db.ListarBoletosPorRecebimento(recebimentoId)
 }
 
 func (r *boletoRepository) ListarBoletosDoDia(data string) ([]models.Boleto, error) {

@@ -1,11 +1,11 @@
 package nota
 
 import (
-	"encoding/base64"
+	//"encoding/base64"
 	"encoding/json"
 
 	//"lapasta/config"
-	Utils "lapasta/internal/Utils"
+	//Utils "lapasta/internal/Utils"
 
 	"lapasta/internal/models"
 	//"lapasta/internal/s3client"
@@ -67,38 +67,39 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	base64String := nota.ImagemBase64
-	if idx := strings.Index(base64String, ","); idx != -1 {
-		base64String = base64String[idx+1:]
-	}
+	//base64String := nota.ImagemBase64
+	//if idx := strings.Index(base64String, ","); idx != -1 {
+	//	base64String = base64String[idx+1:]
+	//}
 
-	fileBytes, err := base64.StdEncoding.DecodeString(base64String)
+	//fileBytes, err := base64.StdEncoding.DecodeString(base64String)
+	//if err != nil {
+	//	log.Println("Erro ao decodificar base64:", err)
+	//	response.IsSuccess = false
+	//	response.ErrorMessage = "Erro ao decodificar a imagem base64"
+	//	w.WriteHeader(http.StatusBadRequest)
+	//	w.Header().Set("Content-Type", "application/json")
+	//	json.NewEncoder(w).Encode(response)
+	//	return
+	//}
+
+	//extensao := ".png"
+	//nomeImagem := Utils.GerarStringAleatoria(12) + extensao
+	//urlImagem, err := Utils.UploadImagemFirebase(fileBytes, nomeImagem, "notas")
+	//if err != nil {
+	//	log.Println("Erro ao salvar imagem:", err)
+	//	response.IsSuccess = false
+	//	response.ErrorMessage = "Erro ao salvar imagem"
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	w.Header().Set("Content-Type", "application/json")
+	//	json.NewEncoder(w).Encode(response)
+	//	return
+	//}
+	//
+	//nota.UrlImagem = urlImagem
+
+	idNota, err := h.service.CriarNota(&nota)
 	if err != nil {
-		log.Println("Erro ao decodificar base64:", err)
-		response.IsSuccess = false
-		response.ErrorMessage = "Erro ao decodificar a imagem base64"
-		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-
-	extensao := ".png"
-	nomeImagem := Utils.GerarStringAleatoria(12) + extensao
-	urlImagem, err := Utils.UploadImagemFirebase(fileBytes, nomeImagem, "notas")
-	if err != nil {
-		log.Println("Erro ao salvar imagem:", err)
-		response.IsSuccess = false
-		response.ErrorMessage = "Erro ao salvar imagem"
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-
-	nota.UrlImagem = urlImagem
-
-	if err := h.service.CriarNota(&nota); err != nil {
 		log.Printf("Erro ao criar a nota: %v", err)
 		response.IsSuccess = false
 		response.Error = err
@@ -108,6 +109,8 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
+
+	nota.Id = idNota
 
 	response.Data = nota
 	w.WriteHeader(http.StatusCreated)

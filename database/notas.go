@@ -7,15 +7,15 @@ import (
 	"time"
 )
 
-func (s *SQLStr) CriarNota(nota *models.Nota) error {
-	var exists bool
+func (s *SQLStr) CriarNota(nota *models.Nota) (int, error) {
+	var exists int
 	checkQuery := `SELECT 1 FROM Notas WHERE NumeroNota = @NumeroNota`
 	err := s.db.QueryRow(checkQuery, sql.Named("NumeroNota", nota.NumeroNota)).Scan(&exists)
 	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("erro ao verificar existencia da nota: %w", err)
+		return 0, fmt.Errorf("erro ao verificar existencia da nota: %w", err)
 	}
-	if exists {
-		return fmt.Errorf("já existe uma nota com o número %s", nota.NumeroNota)
+	if exists == 1 {
+		return 0, fmt.Errorf("já existe uma nota com o número %s", nota.NumeroNota)
 	}
 
 	query := `
@@ -23,12 +23,16 @@ func (s *SQLStr) CriarNota(nota *models.Nota) error {
             Tipo, Valor, IdFuncionario, Url_Imagem, Dia, Descricao,
             NumeroNota, DataEmissao, IdFornecedor, IdPedidoFornecedor
         ) 
+        OUTPUT INSERTED.Id
         VALUES (
             @Tipo, @Valor, @IdFuncionario, @UrlImagem, @Dia, @Descricao,
             @NumeroNota, @DataEmissao, @IdFornecedor, @IdPedidoFornecedor
         )
     `
-	_, err = s.db.Exec(query,
+
+	var id int
+	err = s.db.QueryRow(
+		query,
 		sql.Named("Tipo", nota.Tipo),
 		sql.Named("Valor", nota.Valor),
 		sql.Named("IdFuncionario", nota.IdFuncionario),
@@ -39,17 +43,17 @@ func (s *SQLStr) CriarNota(nota *models.Nota) error {
 		sql.Named("DataEmissao", nota.DataEmissao),
 		sql.Named("IdFornecedor", nota.IdFornecedor),
 		sql.Named("IdPedidoFornecedor", nota.IdPedidoFornecedor),
-	)
+	).Scan(&id)
 
 	if err != nil {
-		return fmt.Errorf("erro ao inserir nota: %w", err)
+		return 0, fmt.Errorf("erro ao inserir nota: %w", err)
 	}
-	return nil
+
+	return id, nil
 }
 
 func (s *SQLStr) ListarNotas(page int) ([]models.Nota, error) {
 	var notas []models.Nota
-
 	limit := 10
 	offset := (page - 1) * limit
 
@@ -84,14 +88,10 @@ func (s *SQLStr) ListarNotas(page int) ([]models.Nota, error) {
 		notas = append(notas, n)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("erro durante a iteração das linhas: %w", err)
-	}
-
 	return notas, nil
 }
 
-func (s *SQLStr) FiltrarDataNota(inicioData time.Time, fimData time.Time) ([]models.Nota, error) {
+func (s *SQLStr) FiltrarDataNota(inicioData, fimData time.Time) ([]models.Nota, error) {
 	var notas []models.Nota
 
 	query := `
@@ -122,10 +122,6 @@ func (s *SQLStr) FiltrarDataNota(inicioData time.Time, fimData time.Time) ([]mod
 			return nil, fmt.Errorf("erro ao escanear notas: %w", err)
 		}
 		notas = append(notas, n)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("erro durante a iteração das linhas: %w", err)
 	}
 
 	return notas, nil
@@ -163,10 +159,6 @@ func (s *SQLStr) BuscarNotasPorNumero(numero string) ([]models.Nota, error) {
 			return nil, fmt.Errorf("erro ao escanear nota: %w", err)
 		}
 		notas = append(notas, n)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("erro durante a iteração das linhas: %w", err)
 	}
 
 	return notas, nil

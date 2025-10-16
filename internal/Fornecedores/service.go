@@ -11,7 +11,7 @@ type FornecedorService interface {
 	BuscarFornecedorPorCNPJouNome(valor string) ([]models.Fornecedor, error)
 	CriarPedidoFornecedor(pedido *models.PedidoFornecedor) error
 	ListarPedidosPorFornecedor(fornecedorId int) ([]models.PedidoFornecedor, error)
-	BuscarPedidosFornecedorPorDescricaoOuId(fornecedorId int, valor string) ([]models.PedidoFornecedor, error) // <-- NOVO
+	BuscarPedidosFornecedorPorDescricaoOuId(fornecedorId int, valor string) ([]models.PedidoFornecedor, error) 
 
 }
 

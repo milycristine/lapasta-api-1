@@ -3,9 +3,9 @@ package models
 type Recebimento struct {
 	Id                 int     `json:"id"`
 	Dia                string  `json:"dia"`
-	Produto            string  `json:"produto"`
-	UrlImagem          string  `json:"urlImagem"`
-	ImagemBase64       string  `json:"imagem"`
+	Produto            *string `json:"produto"`
+	UrlImagem          *string `json:"urlImagem"`
+	ImagemBase64       *string `json:"imagem"`
 	IdResponsavel      uint    `json:"idResponsavel"`
 	NomeResponsavel    string  `json:"nomeResponsavel"`
 	Quantidade         int     `json:"quantidade"`
@@ -14,17 +14,18 @@ type Recebimento struct {
 	NumeroNota         string  `json:"numeroNota"`
 	Vencimento         string  `json:"vencimento"`
 	IdNota             int     `json:"idNota"`
-	IdPedidoFornecedor int     `json:"idPedidoFornecedor"`
-
-	NomeFornecedor    string `json:"fornecedor"`
-	PrazoAcordadoDias int    `json:"prazoAcordadoDias"`
+	IdPedidoFornecedor *int    `json:"idPedidoFornecedor,omitempty"`
+	NomeFornecedor     *string `json:"fornecedor"`
+	FormaPagamento     string  `json:"formaPagamento"` //ex: 7 dias, 14 dias, 21 dias, outro
+	OutroPrazoDias     *int    `json:"outroPrazoDias,omitempty"`
 }
 
 type DadosRecebimentoNota struct {
 	IdNota             int
 	NumeroNota         string
-	IdPedidoFornecedor int
+	IdPedidoFornecedor *int
 	Produto            string
-	PrazoAcordadoDias  int
 	Fornecedor         string
+	FormaPagamento     string
+	OutroPrazoDias     *int
 }

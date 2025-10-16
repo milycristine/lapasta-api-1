@@ -122,7 +122,7 @@ func Controllers() {
 	http.HandleFunc("/buscarPedidoId", fornecedorHandler.BuscarPedidosFornecedorPorDescricaoOuId)
 
 	http.HandleFunc("/boleto", boletoHandler.CriarBoleto)
-	http.HandleFunc("/listarPorPedido", boletoHandler.ListarBoletosPorPedido)
+	http.HandleFunc("/listarPorPedido", boletoHandler.ListarBoletosPorRecebimento)
 	http.HandleFunc("/listarPorFornecedor", boletoHandler.ListarBoletosPorFornecedor)
 	http.HandleFunc("/boletodoDia", boletoHandler.ListarBoletosDoDia)
 	http.HandleFunc("/boletoAPagar", boletoHandler.PagarBoleto)

@@ -2,6 +2,7 @@ package boleto
 
 import (
 	"encoding/json"
+	"fmt"
 	"lapasta/internal/models"
 	"log"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 type BoletoHandler interface {
 	CriarBoleto(w http.ResponseWriter, r *http.Request)
 	ListarBoletosPorFornecedor(w http.ResponseWriter, r *http.Request)
-	ListarBoletosPorPedido(w http.ResponseWriter, r *http.Request)
+	ListarBoletosPorRecebimento(w http.ResponseWriter, r *http.Request)
 	ListarBoletosDoDia(w http.ResponseWriter, r *http.Request)
 	PagarBoleto(w http.ResponseWriter, r *http.Request)
 	ListarBoletosPagos(w http.ResponseWriter, r *http.Request)
@@ -80,8 +81,8 @@ func (h *boletoHandler) ListarBoletosPorFornecedor(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *boletoHandler) ListarBoletosPorPedido(w http.ResponseWriter, r *http.Request) {
-	valor := r.URL.Query().Get("pedidoId")
+func (h *boletoHandler) ListarBoletosPorRecebimento(w http.ResponseWriter, r *http.Request) {
+	valor := r.URL.Query().Get("recebimentoId")
 	response := models.ResponseDefaultModel{IsSuccess: true}
 
 	id, err := strconv.Atoi(valor)
@@ -90,7 +91,7 @@ func (h *boletoHandler) ListarBoletosPorPedido(w http.ResponseWriter, r *http.Re
 		response.ErrorMessage = "ID inválido"
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
-		boletos, err := h.service.ListarBoletosPorPedido(id)
+		boletos, err := h.service.ListarBoletosPorRecebimento(id)
 		if err != nil {
 			response.IsSuccess = false
 			response.ErrorMessage = "Erro ao listar boletos por pedido"
@@ -116,8 +117,9 @@ func (h *boletoHandler) ListarBoletosDoDia(w http.ResponseWriter, r *http.Reques
 	} else {
 		boletos, err := h.service.ListarBoletosDoDia(data)
 		if err != nil {
+			log.Printf("Erro detalhado ao listar boletos do dia: %v", err)
 			response.IsSuccess = false
-			response.ErrorMessage = "Erro ao listar boletos do dia"
+			response.ErrorMessage = fmt.Sprintf("Erro ao listar boletos do dia: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			response.Data = boletos
@@ -139,13 +141,16 @@ func (h *boletoHandler) PagarBoleto(w http.ResponseWriter, r *http.Request) {
 		response.IsSuccess = false
 		response.ErrorMessage = "Código de barras é obrigatório"
 		w.WriteHeader(http.StatusBadRequest)
-	} else if err := h.service.PagarBoleto(body.CodigoBarras); err != nil {
-		response.IsSuccess = false
-		response.ErrorMessage = "Erro ao pagar boleto"
-		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		response.Data = "Boleto pago com sucesso"
-		w.WriteHeader(http.StatusOK)
+		err := h.service.PagarBoleto(body.CodigoBarras)
+		if err != nil {
+			response.IsSuccess = false
+			response.ErrorMessage = err.Error()
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			response.Data = "Boleto pago com sucesso"
+			w.WriteHeader(http.StatusOK)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
