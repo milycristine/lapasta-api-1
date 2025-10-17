@@ -449,3 +449,43 @@ func (r *SQLStr) TotalBoletosPagosMesAtual() (float64, error) {
 	}
 	return total, nil
 }
+
+func (r *SQLStr) FiltrarBoletosPagosPorData(inicioData, fimData string) ([]models.Boleto, error) {
+	layout := "2006-01-02"
+	start, _ := time.Parse(layout, inicioData)
+	end, _ := time.Parse(layout, fimData)
+
+	query := `
+	SELECT b.Id, b.RecebimentoId, b.CodigoBarras, b.DataCadastro, b.DataVencimento, b.Valor, b.StatusId, f.Nome AS FornecedorNome
+	FROM BoletosRecebidos b
+	INNER JOIN Recebimento r ON r.Id = b.RecebimentoId
+	INNER JOIN PedidoFornecedor pf ON pf.Id = r.IdPedidoFornecedor
+	INNER JOIN Fornecedores f ON f.Id = pf.FornecedorId
+	WHERE b.StatusId = 2 AND CONVERT(date, b.DataPagamento) BETWEEN @InicioData AND @FimData
+	ORDER BY b.DataPagamento DESC
+	`
+
+	rows, err := r.db.Query(query,
+		sql.Named("InicioData", start.Format("2006-01-02")),
+		sql.Named("FimData", end.Format("2006-01-02")),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao listar boletos pagos por data: %w", err)
+	}
+	defer rows.Close()
+
+	var boletos []models.Boleto
+	for rows.Next() {
+		var b models.Boleto
+		if err := rows.Scan(
+			&b.Id, &b.RecebimentoId, &b.CodigoBarras, &b.DataCadastro,
+			&b.DataVencimento, &b.Valor, &b.StatusId, &b.FornecedorNome,
+		); err != nil {
+			return nil, fmt.Errorf("erro ao escanear boleto pago: %w", err)
+		}
+		boletos = append(boletos, b)
+	}
+
+	return boletos, nil
+}
+

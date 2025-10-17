@@ -12,6 +12,8 @@ type RecebimentoRepository interface {
 	FiltrarDataRecebimentos(inicioData, fimData time.Time) ([]models.Recebimento, error)
 	ValidarRecebimento(recebimento *models.Recebimento) (bool, string, error)
 	BuscarDadosRecebimentoPorNumeroNota(numeroNota string) (*models.DadosRecebimentoNota, error)
+	TotalRecebimentosAvistaMesAtual() (float64, error)
+	ListarRecebimentosAvistaMesAtual() ([]models.Recebimento, error)
 }
 
 type recebimentoRepository struct {
@@ -39,4 +41,10 @@ func (r *recebimentoRepository) ValidarRecebimento(recebimento *models.Recebimen
 }
 func (r *recebimentoRepository) BuscarDadosRecebimentoPorNumeroNota(numeroNota string) (*models.DadosRecebimentoNota, error) {
 	return r.db.BuscarDadosRecebimentoPorNumeroNota(numeroNota)
+}
+func (r *recebimentoRepository) TotalRecebimentosAvistaMesAtual() (float64, error) {
+	return r.db.TotalRecebimentosAvistaMesAtual()
+}
+func (r *recebimentoRepository) ListarRecebimentosAvistaMesAtual() ([]models.Recebimento, error) {
+	return r.db.ListarRecebimentosAvistaMesAtual()
 }

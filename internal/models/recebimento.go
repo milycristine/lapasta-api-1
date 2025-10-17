@@ -16,7 +16,7 @@ type Recebimento struct {
 	IdNota             int     `json:"idNota"`
 	IdPedidoFornecedor *int    `json:"idPedidoFornecedor,omitempty"`
 	NomeFornecedor     *string `json:"fornecedor"`
-	FormaPagamento     string  `json:"formaPagamento"` //ex: 7 dias, 14 dias, 21 dias, outro
+	FormaPagamento     string  `json:"formaPagamento"` //ex: avista , 7 dias, 14 dias, 21 dias, outro
 	OutroPrazoDias     *int    `json:"outroPrazoDias,omitempty"`
 }
 
@@ -29,3 +29,4 @@ type DadosRecebimentoNota struct {
 	FormaPagamento     string
 	OutroPrazoDias     *int
 }
+	

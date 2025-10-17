@@ -23,16 +23,16 @@ func (s *SQLStr) CriarRecebimento(r *models.Recebimento) error {
 	}
 
 	query := `
-				INSERT INTO Recebimento (
-					Dia, UrlImagem, IdResponsavel, Quantidade, Peso, Valor,				
-					Vencimento, IdNota, IdPedidoFornecedor
-				)
-				OUTPUT INSERTED.Id
-				VALUES (
-					@Dia, @UrlImagem, @IdResponsavel, @Quantidade, @Peso, @Valor,
-					@Vencimento, @IdNota, @IdPedidoFornecedor
-				)
-			`
+		INSERT INTO Recebimento (
+			Dia, UrlImagem, IdResponsavel, Quantidade, Peso, Valor,
+			Vencimento, IdNota, IdPedidoFornecedor, FormaPagamento, OutroPrazoDias
+		)
+		OUTPUT INSERTED.Id
+		VALUES (
+			@Dia, @UrlImagem, @IdResponsavel, @Quantidade, @Peso, @Valor,
+			@Vencimento, @IdNota, @IdPedidoFornecedor, @FormaPagamento, @OutroPrazoDias
+		)
+	`
 
 	var id sql.NullInt64
 	err = s.db.QueryRow(
@@ -46,6 +46,8 @@ func (s *SQLStr) CriarRecebimento(r *models.Recebimento) error {
 		sql.Named("Vencimento", r.Vencimento),
 		sql.Named("IdNota", r.IdNota),
 		sql.Named("IdPedidoFornecedor", r.IdPedidoFornecedor),
+		sql.Named("FormaPagamento", r.FormaPagamento),
+		sql.Named("OutroPrazoDias", r.OutroPrazoDias),
 	).Scan(&id)
 
 	if err != nil {
@@ -73,7 +75,8 @@ func (s *SQLStr) ListarRecebimentos(page int) ([]models.Recebimento, error) {
 			N.NumeroNota,
 			N.Descricao AS Produto,
 			COALESCE(FORNE.Nome, '') AS NomeFornecedor,
-			N.Tipo AS FormaPagamento
+			R.FormaPagamento,
+			R.OutroPrazoDias
 		FROM Recebimento R WITH (NOLOCK)
 		JOIN Funcionarios F WITH (NOLOCK) ON F.Id = R.IdResponsavel
 		JOIN Notas N WITH (NOLOCK) ON N.Id = R.IdNota
@@ -81,7 +84,7 @@ func (s *SQLStr) ListarRecebimentos(page int) ([]models.Recebimento, error) {
 		ORDER BY R.Dia DESC
 		OFFSET @Offset ROWS
 		FETCH NEXT @Limit ROWS ONLY
-		`
+	`
 
 	rows, err := s.db.Query(query, sql.Named("Offset", offset), sql.Named("Limit", limit))
 	if err != nil {
@@ -91,80 +94,48 @@ func (s *SQLStr) ListarRecebimentos(page int) ([]models.Recebimento, error) {
 
 	for rows.Next() {
 		var r models.Recebimento
+		var formaPagamento sql.NullString
+		var outroPrazoDias sql.NullInt64
+
 		if err := rows.Scan(
-			&r.Id, &r.Dia, &r.UrlImagem, &r.IdResponsavel,
-			&r.NomeResponsavel, &r.Quantidade, &r.Peso, &r.Valor,
-			&r.Vencimento, &r.IdNota, &r.IdPedidoFornecedor,
+			&r.Id,
+			&r.Dia,
+			&r.UrlImagem,
+			&r.IdResponsavel,
+			&r.NomeResponsavel,
+			&r.Quantidade,
+			&r.Peso,
+			&r.Valor,
+			&r.Vencimento,
+			&r.IdNota,
+			&r.IdPedidoFornecedor,
 			&r.NumeroNota,
 			&r.Produto,
-			&r.NomeFornecedor, &r.FormaPagamento,
+			&r.NomeFornecedor,
+			&formaPagamento,
+			&outroPrazoDias,
 		); err != nil {
 			return nil, fmt.Errorf("erro ao escanear recebimento: %w", err)
 		}
+
+		if formaPagamento.Valid {
+			r.FormaPagamento = formaPagamento.String
+		} else {
+			r.FormaPagamento = ""
+		}
+
+		if outroPrazoDias.Valid {
+			val := int(outroPrazoDias.Int64)
+			r.OutroPrazoDias = &val
+		} else {
+			r.OutroPrazoDias = nil
+		}
+
 		recebimentos = append(recebimentos, r)
 	}
 
 	return recebimentos, nil
 }
-func (s *SQLStr) ValidarRecebimento(r *models.Recebimento) (bool, string, error) {
-	parseDate := func(dateStr string) (time.Time, error) {
-		formats := []string{
-			time.RFC3339Nano,
-			time.RFC3339,
-			"2006-01-02T15:04:05.999999",
-			"2006-01-02T15:04:05",
-			"2006-01-02",
-		}
-		for _, f := range formats {
-			if t, err := time.Parse(f, dateStr); err == nil {
-				return t, nil
-			}
-		}
-		return time.Time{}, fmt.Errorf("formato inválido de data: %s", dateStr)
-	}
-
-	dia, err := parseDate(r.Dia)
-	if err != nil {
-		return false, "", fmt.Errorf("data de recebimento inválida: %w", err)
-	}
-	venc, err := parseDate(r.Vencimento)
-	if err != nil {
-		return false, "", fmt.Errorf("data de vencimento inválida: %w", err)
-	}
-
-	toDate := func(t time.Time) time.Time {
-		loc := t.Location()
-		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
-	}
-
-	var dias int
-	switch r.FormaPagamento {
-	case "À vista":
-		dias = 0
-	case "7", "14", "21":
-		dias, _ = strconv.Atoi(r.FormaPagamento)
-	case "Outro":
-		if r.OutroPrazoDias == nil || *r.OutroPrazoDias <= 0 {
-			return false, "Tipo de pagamento 'Outro' informado sem número de dias", nil
-		}
-		dias = *r.OutroPrazoDias
-	default:
-		return false, fmt.Sprintf("Tipo de pagamento inválido: %s", r.FormaPagamento), nil
-	}
-
-	dataMinima := toDate(dia).AddDate(0, 0, dias)
-	vencData := toDate(venc)
-
-	if vencData.Before(dataMinima) {
-		return false, fmt.Sprintf(
-				"Data de vencimento antes do permitido (%d dias, mínimo: %s)",
-				dias, dataMinima.Format("02/01/2006")),
-			nil
-	}
-
-	return true, "", nil
-}
-
 func (s *SQLStr) FiltrarDataRecebimentos(inicioData, fimData time.Time) ([]models.Recebimento, error) {
 	var recebimentos []models.Recebimento
 
@@ -176,13 +147,13 @@ func (s *SQLStr) FiltrarDataRecebimentos(inicioData, fimData time.Time) ([]model
 		N.NumeroNota,
 		PF.Descricao AS Produto,
 		FORNE.Nome AS NomeFornecedor,
-		PF.FormaPagamento,
-		PF.OutroPrazoDias
+		R.FormaPagamento,
+		R.OutroPrazoDias
 	FROM Recebimento R WITH (NOLOCK)
 	JOIN Funcionarios F WITH (NOLOCK) ON F.Id = R.IdResponsavel
 	JOIN Notas N WITH (NOLOCK) ON N.Id = R.IdNota
-	JOIN PedidoFornecedor PF WITH (NOLOCK) ON PF.Id = R.IdPedidoFornecedor
-	JOIN Fornecedores FORNE WITH (NOLOCK) ON FORNE.Id = PF.FornecedorId
+	LEFT JOIN PedidoFornecedor PF WITH (NOLOCK) ON PF.Id = R.IdPedidoFornecedor
+	LEFT JOIN Fornecedores FORNE WITH (NOLOCK) ON FORNE.Id = PF.FornecedorId
 	WHERE R.Dia BETWEEN @InicioData AND @FimData
 	ORDER BY R.Dia DESC
 	`
@@ -198,18 +169,47 @@ func (s *SQLStr) FiltrarDataRecebimentos(inicioData, fimData time.Time) ([]model
 
 	for rows.Next() {
 		var r models.Recebimento
-		var outroPrazoDias *int
+		var formaPagamento sql.NullString
+		var outroPrazoDias sql.NullInt64
+		var produto sql.NullString
+		var nomeFornecedor sql.NullString
+
 		if err := rows.Scan(
 			&r.Id, &r.Dia, &r.UrlImagem, &r.IdResponsavel,
 			&r.NomeResponsavel, &r.Quantidade, &r.Peso, &r.Valor,
 			&r.Vencimento, &r.IdNota, &r.IdPedidoFornecedor,
-			&r.NumeroNota, &r.Produto,
-			&r.NomeFornecedor, &r.FormaPagamento,
+			&r.NumeroNota, &produto,
+			&nomeFornecedor, &formaPagamento,
 			&outroPrazoDias,
 		); err != nil {
 			return nil, fmt.Errorf("erro ao escanear recebimento: %w", err)
 		}
-		r.OutroPrazoDias = outroPrazoDias
+
+		if produto.Valid {
+			r.Produto = &produto.String
+		} else {
+			r.Produto = nil
+		}
+
+		if nomeFornecedor.Valid {
+			r.NomeFornecedor = &nomeFornecedor.String
+		} else {
+			r.NomeFornecedor = nil
+		}
+
+		if formaPagamento.Valid {
+			r.FormaPagamento = formaPagamento.String
+		} else {
+			r.FormaPagamento = ""
+		}
+
+		if outroPrazoDias.Valid {
+			val := int(outroPrazoDias.Int64)
+			r.OutroPrazoDias = &val
+		} else {
+			r.OutroPrazoDias = nil
+		}
+
 		recebimentos = append(recebimentos, r)
 	}
 
@@ -255,4 +255,136 @@ func (r *SQLStr) BuscarDadosRecebimentoPorNumeroNota(numeroNota string) (*models
 
 	dados.OutroPrazoDias = outroPrazoDias
 	return &dados, nil
+}
+
+func (r *SQLStr) TotalRecebimentosAvistaMesAtual() (float64, error) {
+	query := `
+        SELECT COALESCE(SUM(Valor), 0)
+        FROM Recebimento
+        WHERE LOWER(FormaPagamento) IN ('avista', 'pix', 'dinheiro', 'debito')
+        AND Id NOT IN (SELECT RecebimentoId FROM BoletosRecebidos)
+        AND YEAR(Dia) = YEAR(GETDATE())
+        AND MONTH(Dia) = MONTH(GETDATE())
+    `
+	var total float64
+	err := r.db.QueryRow(query).Scan(&total)
+	if err != nil {
+		return 0, fmt.Errorf("erro ao calcular total de recebimentos à vista/pix: %w", err)
+	}
+	return total, nil
+}
+
+func (r *SQLStr) ListarRecebimentosAvistaMesAtual() ([]models.Recebimento, error) {
+	query := `
+        SELECT 
+            R.Id,
+            R.Dia,
+            PF.Descricao AS Produto,
+            R.Valor,
+            R.FormaPagamento,
+            F.Nome AS NomeResponsavel,
+            FORNE.Nome AS NomeFornecedor
+        FROM Recebimento R
+        JOIN Funcionarios F ON F.Id = R.IdResponsavel
+        JOIN PedidoFornecedor PF ON PF.Id = R.IdPedidoFornecedor
+        JOIN Fornecedores FORNE ON FORNE.Id = PF.FornecedorId
+        WHERE LOWER(R.FormaPagamento) IN ('avista', 'pix', 'dinheiro', 'debito')
+        AND R.Id NOT IN (SELECT RecebimentoId FROM BoletosRecebidos)
+        AND YEAR(R.Dia) = YEAR(GETDATE())
+        AND MONTH(R.Dia) = MONTH(GETDATE())
+        ORDER BY R.Dia DESC
+    `
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao listar recebimentos à vista/pix: %w", err)
+	}
+	defer rows.Close()
+
+	var recebimentos []models.Recebimento
+	for rows.Next() {
+		var rcv models.Recebimento
+		var formaPagamento sql.NullString
+
+		if err := rows.Scan(
+			&rcv.Id,
+			&rcv.Dia,
+			&rcv.Produto,
+			&rcv.Valor,
+			&formaPagamento,
+			&rcv.NomeResponsavel,
+			&rcv.NomeFornecedor,
+		); err != nil {
+			return nil, fmt.Errorf("erro ao escanear recebimento à vista: %w", err)
+		}
+
+		if formaPagamento.Valid {
+			rcv.FormaPagamento = formaPagamento.String
+		} else {
+			rcv.FormaPagamento = ""
+		}
+
+		recebimentos = append(recebimentos, rcv)
+	}
+
+	return recebimentos, nil
+}
+
+func (s *SQLStr) ValidarRecebimento(r *models.Recebimento) (bool, string, error) {
+	parseDate := func(dateStr string) (time.Time, error) {
+		formats := []string{
+			time.RFC3339Nano,
+			time.RFC3339,
+			"2006-01-02T15:04:05.999999",
+			"2006-01-02T15:04:05",
+			"2006-01-02",
+		}
+		for _, f := range formats {
+			if t, err := time.Parse(f, dateStr); err == nil {
+				return t, nil
+			}
+		}
+		return time.Time{}, fmt.Errorf("formato inválido de data: %s", dateStr)
+	}
+
+	dia, err := parseDate(r.Dia)
+	if err != nil {
+		return false, "", fmt.Errorf("data de recebimento inválida: %w", err)
+	}
+	venc, err := parseDate(r.Vencimento)
+	if err != nil {
+		return false, "", fmt.Errorf("data de vencimento inválida: %w", err)
+	}
+
+	toDate := func(t time.Time) time.Time {
+		loc := t.Location()
+		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
+	}
+
+	var dias int
+	switch r.FormaPagamento {
+	case "À vista", "avista", "pix", "dinheiro", "debito":
+		dias = 0
+	case "7", "14", "21":
+		dias, _ = strconv.Atoi(r.FormaPagamento)
+	case "Outro":
+		if r.OutroPrazoDias == nil || *r.OutroPrazoDias <= 0 {
+			return false, "Tipo de pagamento 'Outro' informado sem número de dias", nil
+		}
+		dias = *r.OutroPrazoDias
+	default:
+		return false, fmt.Sprintf("Tipo de pagamento inválido: %s", r.FormaPagamento), nil
+	}
+
+	dataMinima := toDate(dia).AddDate(0, 0, dias)
+	vencData := toDate(venc)
+
+	if vencData.Before(dataMinima) {
+		return false, fmt.Sprintf(
+				"Data de vencimento antes do permitido (%d dias, mínimo: %s)",
+				dias, dataMinima.Format("02/01/2006")),
+			nil
+	}
+
+	return true, "", nil
 }

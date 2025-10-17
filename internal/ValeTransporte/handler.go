@@ -74,7 +74,6 @@ func (h *ValeHandler) ListarValesDaSemana(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Novo: parametro mes (opcional)
 	mes := r.URL.Query().Get("mes")
 	mesInt := 0
 	if mes != "" {

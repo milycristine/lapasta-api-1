@@ -26,3 +26,10 @@ type BoletoRelatorio struct {
 	CodigoBarras   string
 	StatusId       int
 }
+
+func (b *Boleto) DataPagamentoOrDefault() string {
+    if b.DataPagamento != nil {
+        return *b.DataPagamento
+    }
+    return ""
+}

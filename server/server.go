@@ -5,6 +5,7 @@ import (
 	"lapasta/config"
 	auth "lapasta/internal/AUTH"
 	boleto "lapasta/internal/Boletos"
+	gastos "lapasta/internal/Gastos"
 	documento "lapasta/internal/Documento"
 	fornecedor "lapasta/internal/Fornecedores"
 	funcionario "lapasta/internal/Funcionario"
@@ -67,6 +68,10 @@ func Controllers() {
 	motoristaService := motorista.NovoMotoristaService(motoristaRepo)
 	motoristaHandler := motorista.NovoMotoristaHandler(motoristaService)
 
+	gastosRepo := gastos.NovoGastosRepository(utils.ConnectionDb)
+	gastosService := gastos.NovoGastosService(gastosRepo)
+	gastosHandler := gastos.NovoGastosHandler(gastosService)
+
 	log.Printf("Iniciando servidor na porta: %s", config.Yml.API.Port)
 
 	http.HandleFunc("/login", auth.LoginHandler(authService))
@@ -75,6 +80,8 @@ func Controllers() {
 	http.HandleFunc("/listarRecebimento", recebimentoHandler.ListarRecebimentos)
 	http.HandleFunc("/filtrarDataRecebimento", recebimentoHandler.FiltrarDataRecebimentos)
 	http.HandleFunc("/buscarPorNota", recebimentoHandler.BuscarDadosRecebimentoPorNumeroNota)
+	http.HandleFunc("/totaisAvista", recebimentoHandler.TotalRecebimentosAvistaMesAtual)
+	http.HandleFunc("/listarAvista", recebimentoHandler.ListarRecebimentosAvistaMesAtual)
 
 	http.HandleFunc("/listarPonto", pontoHandler.ListarPontos)
 	http.HandleFunc("/listarPontoId", pontoHandler.ListarPontosPorId)
@@ -132,6 +139,10 @@ func Controllers() {
 	http.HandleFunc("/atualizarStatusBoleto", boletoHandler.AtualizarBoleto)
 	http.HandleFunc("/gerarRelatorio", boletoHandler.GerarEEnviarRelatorioBoletos)
 	http.HandleFunc("/boletostotais", boletoHandler.TotaisBoletos)
+	http.HandleFunc("/filtrarBoleto", boletoHandler.FiltrarBoletosPagosPorData)
+
+	http.HandleFunc("/totalGastos", gastosHandler.TotalGastos)
+	http.HandleFunc("/listarGastos", gastosHandler.ListarGastos)
 
 	http.HandleFunc("/motorista", motoristaHandler.CriarMotorista)
 	http.HandleFunc("/editarMotorista", motoristaHandler.EditarMotorista)

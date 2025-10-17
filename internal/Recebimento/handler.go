@@ -140,7 +140,6 @@ func (h *RecebimentoHandler) ListarRecebimentos(w http.ResponseWriter, r *http.R
 		log.Printf("Erro ao codificar a resposta: %v", err)
 	}
 }
-
 func (h *RecebimentoHandler) FiltrarDataRecebimentos(w http.ResponseWriter, r *http.Request) {
 	inicioDataStr := r.URL.Query().Get("inicioData")
 	fimDataStr := r.URL.Query().Get("fimData")
@@ -150,43 +149,56 @@ func (h *RecebimentoHandler) FiltrarDataRecebimentos(w http.ResponseWriter, r *h
 		return
 	}
 
+	// Parse detalhado com log
 	inicioData, err := time.Parse("2006-01-02", inicioDataStr)
 	if err != nil {
+		log.Printf("[Erro Parse inicioData] Valor: %s, Erro: %v", inicioDataStr, err)
 		http.Error(w, "Formato de 'inicioData' inválido. Use o formato YYYY-MM-DD", http.StatusBadRequest)
 		return
 	}
 
 	fimData, err := time.Parse("2006-01-02", fimDataStr)
 	if err != nil {
+		log.Printf("[Erro Parse fimData] Valor: %s, Erro: %v", fimDataStr, err)
 		http.Error(w, "Formato de 'fimData' inválido. Use o formato YYYY-MM-DD", http.StatusBadRequest)
 		return
 	}
 
+	// Ajustar hora para incluir o dia todo
+	inicioData = inicioData.Truncate(24 * time.Hour)
+	fimData = fimData.Truncate(24*time.Hour).AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	log.Printf("[Info] Filtrando recebimentos de %s até %s", inicioData.Format(time.RFC3339), fimData.Format(time.RFC3339))
+
 	pontos, err := h.service.FiltrarDataRecebimentos(inicioData, fimData)
 	if err != nil {
-		log.Printf("Erro ao listar recebimentos por data: %v", err)
+		log.Printf("[Erro SQL] ao listar recebimentos: %v", err)
 		response := models.ResponseDefaultModel{
 			IsSuccess:    false,
 			Error:        err,
 			ErrorMessage: "Erro ao listar recebimentos por data",
 		}
-		//w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response)
-		return	
+		return
 	}
+
+	// Log do resultado para depuração
+	log.Printf("[Info] Recebimentos encontrados: %d", len(pontos))
 
 	response := models.ResponseDefaultModel{
 		IsSuccess: true,
 		Data:      pontos,
 	}
 
-	//w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("[Erro Encode JSON] %v", err)
+	}
 }
+
 func (h *RecebimentoHandler) BuscarDadosRecebimentoPorNumeroNota(w http.ResponseWriter, r *http.Request) {
 	numeroNota := r.URL.Query().Get("numeroNota")
 	if numeroNota == "" {
@@ -212,4 +224,61 @@ func (h *RecebimentoHandler) BuscarDadosRecebimentoPorNumeroNota(w http.Response
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
+}
+func (h *RecebimentoHandler) TotalRecebimentosAvistaMesAtual(w http.ResponseWriter, r *http.Request) {
+	total, err := h.service.TotalRecebimentosAvistaMesAtual()
+	response := models.ResponseDefaultModel{
+		IsSuccess: true,
+		Data:      total,
+	}
+
+	if err != nil {
+		log.Printf("Erro ao buscar total de pagamentos à vista: %v", err)
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = "Erro ao buscar total de pagamentos à vista"
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Erro ao codificar resposta: %v", err)
+	}
+}
+
+func (h *RecebimentoHandler) ListarRecebimentosAvistaMesAtual(w http.ResponseWriter, r *http.Request) {
+	page := r.URL.Query().Get("page")
+	if page == "" {
+		page = "1"
+	}
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil || pageInt <= 0 {
+		http.Error(w, "Página inválida", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Listando pagamentos à vista (Pix, dinheiro, débito) do mês atual, página %d", pageInt)
+	pagamentos, err := h.service.ListarRecebimentosAvistaMesAtual()
+	response := models.ResponseDefaultModel{
+		IsSuccess: true,
+		Data:      pagamentos,
+	}
+
+	if err != nil {
+		log.Printf("Erro ao listar pagamentos à vista: %v", err)
+		response.IsSuccess = false
+		response.Error = err
+		response.ErrorMessage = "Erro ao listar pagamentos à vista"
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Erro ao codificar resposta: %v", err)
+	}
 }

@@ -19,6 +19,7 @@ type BoletoService interface {
 	TotalBoletosAtrasados() (float64, error)
 	TotalBoletosPendentesMesAtual() (float64, error)
 	TotalBoletosPagosMesAtual() (float64, error)
+	FiltrarBoletosPagosPorData(inicioData, fimData string) ([]models.Boleto, error)
 }
 
 type boletoService struct {
@@ -77,4 +78,7 @@ func (s *boletoService) TotalBoletosPendentesMesAtual() (float64, error) {
 }
 func (s *boletoService) TotalBoletosPagosMesAtual() (float64, error) {
 	return s.repo.TotalBoletosPagosMesAtual()
+}
+func (s *boletoService) FiltrarBoletosPagosPorData(inicioData, fimData string) ([]models.Boleto, error) {
+	return s.repo.FiltrarBoletosPagosPorData(inicioData, fimData)
 }

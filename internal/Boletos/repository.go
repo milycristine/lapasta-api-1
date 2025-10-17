@@ -20,6 +20,7 @@ type BoletoRepository interface {
 	TotalBoletosAtrasados() (float64, error)
 	TotalBoletosPendentesMesAtual() (float64, error)
 	TotalBoletosPagosMesAtual() (float64, error)
+	FiltrarBoletosPagosPorData(inicioData, fimData string) ([]models.Boleto, error)
 }
 
 type boletoRepository struct {
@@ -79,4 +80,7 @@ func (r *boletoRepository) TotalBoletosPendentesMesAtual() (float64, error) {
 }
 func (r *boletoRepository) TotalBoletosPagosMesAtual() (float64, error) {
 	return r.db.TotalBoletosPagosMesAtual()
+}
+func (r *boletoRepository) 	FiltrarBoletosPagosPorData(inicioData, fimData string) ([]models.Boleto, error){
+	return r.db.FiltrarBoletosPagosPorData(inicioData, fimData)
 }

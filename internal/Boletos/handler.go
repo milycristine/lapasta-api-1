@@ -23,6 +23,8 @@ type BoletoHandler interface {
 	AtualizarBoleto(w http.ResponseWriter, r *http.Request)
 	GerarEEnviarRelatorioBoletos(w http.ResponseWriter, r *http.Request)
 	TotaisBoletos(w http.ResponseWriter, r *http.Request)
+	FiltrarBoletosPagosPorData(w http.ResponseWriter, r *http.Request)
+
 }
 
 type boletoHandler struct {
@@ -310,5 +312,47 @@ func (h *boletoHandler) TotaisBoletos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *boletoHandler) FiltrarBoletosPagosPorData(w http.ResponseWriter, r *http.Request) {
+	inicioDataStr := r.URL.Query().Get("inicioData")
+	fimDataStr := r.URL.Query().Get("fimData")
+
+	if inicioDataStr == "" || fimDataStr == "" {
+		http.Error(w, "Os parâmetros 'inicioData' e 'fimData' são obrigatórios", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := time.Parse("2006-01-02", inicioDataStr); err != nil {
+		http.Error(w, "Formato de 'inicioData' inválido. Use o formato YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+	if _, err := time.Parse("2006-01-02", fimDataStr); err != nil {
+		http.Error(w, "Formato de 'fimData' inválido. Use o formato YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+
+	boletos, err := h.service.FiltrarBoletosPagosPorData(inicioDataStr, fimDataStr)
+	if err != nil {
+		log.Printf("Erro ao listar boletos pagos por data: %v", err)
+		response := models.ResponseDefaultModel{
+			IsSuccess:    false,
+			Error:        err,
+			ErrorMessage: "Erro ao listar boletos pagos por data",
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	response := models.ResponseDefaultModel{
+		IsSuccess: true,
+		Data:      boletos,
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
