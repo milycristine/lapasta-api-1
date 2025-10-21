@@ -140,24 +140,22 @@ func (s *SQLStr) FiltrarDataRecebimentos(inicioData, fimData time.Time) ([]model
 	var recebimentos []models.Recebimento
 
 	query := `
-	SELECT 
-		R.Id, R.Dia, R.UrlImagem, R.IdResponsavel, 
-		F.Nome AS NomeResponsavel, R.Quantidade, R.Peso, R.Valor, 
-		R.Vencimento, R.IdNota, R.IdPedidoFornecedor,
-		N.NumeroNota,
-		PF.Descricao AS Produto,
-		FORNE.Nome AS NomeFornecedor,
-		R.FormaPagamento,
-		R.OutroPrazoDias
-	FROM Recebimento R WITH (NOLOCK)
-	JOIN Funcionarios F WITH (NOLOCK) ON F.Id = R.IdResponsavel
-	JOIN Notas N WITH (NOLOCK) ON N.Id = R.IdNota
-	LEFT JOIN PedidoFornecedor PF WITH (NOLOCK) ON PF.Id = R.IdPedidoFornecedor
-	LEFT JOIN Fornecedores FORNE WITH (NOLOCK) ON FORNE.Id = PF.FornecedorId
-	WHERE R.Dia BETWEEN @InicioData AND @FimData
-	ORDER BY R.Dia DESC
+		SELECT 
+		    R.Id, R.Dia, R.UrlImagem, R.IdResponsavel, 
+		    F.Nome AS NomeResponsavel, R.Quantidade, R.Peso, R.Valor, 
+		    R.Vencimento, R.IdNota, R.IdPedidoFornecedor,
+		    N.NumeroNota,
+		    N.Descricao AS Produto,
+		    COALESCE(FORNE.Nome, '') AS NomeFornecedor,
+		    R.FormaPagamento,
+		    R.OutroPrazoDias
+		FROM Recebimento R WITH (NOLOCK)
+		JOIN Funcionarios F WITH (NOLOCK) ON F.Id = R.IdResponsavel
+		JOIN Notas N WITH (NOLOCK) ON N.Id = R.IdNota
+		LEFT JOIN Fornecedores FORNE WITH (NOLOCK) ON FORNE.Id = N.IdFornecedor
+		WHERE R.Dia BETWEEN @InicioData AND @FimData
+		ORDER BY R.Dia DESC
 	`
-
 	rows, err := s.db.Query(query,
 		sql.Named("InicioData", inicioData),
 		sql.Named("FimData", fimData),
