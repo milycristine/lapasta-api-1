@@ -43,7 +43,7 @@ func (h *PagamentoHandler) CriarPagamento(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -191,6 +191,6 @@ func (h *PagamentoHandler) AtualizarPagamento(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }

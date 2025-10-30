@@ -48,12 +48,12 @@ func (h *funcionarioHandler) CriarFuncionario(w http.ResponseWriter, r *http.Req
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
 func (h *funcionarioHandler) EditarFuncionario(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	var funcionario models.Funcionario
 	response := models.ResponseDefaultModel{
@@ -138,7 +138,7 @@ func (h *funcionarioHandler) BuscarFuncionarioPorCPF(w http.ResponseWriter, r *h
 		BotaoStatus: funcionarioComPontos.BotaoStatus,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -171,7 +171,7 @@ func (h *funcionarioHandler) BuscarFuncionarioPorID(w http.ResponseWriter, r *ht
 		Data:      funcionario,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 

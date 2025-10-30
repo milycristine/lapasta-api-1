@@ -132,7 +132,7 @@ func (h *PontoHandler) ListarPontosPorIdEDia(w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusOK)
 	}
 
-	//w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
@@ -160,7 +160,7 @@ func (h *PontoHandler) RegistrarEntrada(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	//w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
@@ -188,7 +188,7 @@ func (h *PontoHandler) RegistrarSaidaAlmoco(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusOK)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -215,7 +215,7 @@ func (h *PontoHandler) RegistrarRetornoAlmoco(w http.ResponseWriter, r *http.Req
 		w.WriteHeader(http.StatusOK)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -242,7 +242,7 @@ func (h *PontoHandler) RegistrarSaida(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 func (h *PontoHandler) ListarPontosPorData(w http.ResponseWriter, r *http.Request) {

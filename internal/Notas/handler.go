@@ -38,7 +38,7 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 		response.Error = err
 		response.ErrorMessage = "Formato de entrada inválido"
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -49,7 +49,7 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 			response.IsSuccess = false
 			response.ErrorMessage = "Fornecedor obrigatório para nota do tipo FORNECEDOR"
 			w.WriteHeader(http.StatusBadRequest)
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			json.NewEncoder(w).Encode(response)
 			return
 		}
@@ -62,7 +62,7 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 		response.IsSuccess = false
 		response.ErrorMessage = "Tipo de nota inválido. Permitidos: FORNECEDOR ou AVULSA"
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -78,7 +78,7 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 	//	response.IsSuccess = false
 	//	response.ErrorMessage = "Erro ao decodificar a imagem base64"
 	//	w.WriteHeader(http.StatusBadRequest)
-	//	w.Header().Set("Content-Type", "application/json")
+	//	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	//	json.NewEncoder(w).Encode(response)
 	//	return
 	//}
@@ -91,7 +91,7 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 	//	response.IsSuccess = false
 	//	response.ErrorMessage = "Erro ao salvar imagem"
 	//	w.WriteHeader(http.StatusInternalServerError)
-	//	w.Header().Set("Content-Type", "application/json")
+	//	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	//	json.NewEncoder(w).Encode(response)
 	//	return
 	//}
@@ -105,7 +105,7 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 		response.Error = err
 		response.ErrorMessage = err.Error()
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -114,7 +114,7 @@ func (h *NotaHandler) CriarNota(w http.ResponseWriter, r *http.Request) {
 
 	response.Data = nota
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -182,7 +182,7 @@ func (h *NotaHandler) FiltrarDataNota(w http.ResponseWriter, r *http.Request) {
 			Error:        err,
 			ErrorMessage: "Erro ao listar notas por data",
 		}
-		//w.Header().Set("Content-Type", "application/json")
+		//w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response)
@@ -194,7 +194,7 @@ func (h *NotaHandler) FiltrarDataNota(w http.ResponseWriter, r *http.Request) {
 		Data:      pontos,
 	}
 
-	//w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)

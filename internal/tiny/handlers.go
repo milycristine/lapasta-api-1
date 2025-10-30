@@ -100,7 +100,7 @@ func GerarNotasMotoristasHandler(sqlConn *sql.SQLStr) http.HandlerFunc {
 			notas = append(notas, *v)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(notas)
 	}
 }
@@ -118,8 +118,8 @@ func formatarDataSQL(data string) string {
 	layouts := []string{"02/01/2006", "02-01-2006"}
 	for _, layout := range layouts {
 		if t, err := time.Parse(layout, data); err == nil {
-			return t.Format("2006-01-02") 
+			return t.Format("2006-01-02")
 		}
 	}
-	return data 
+	return data
 }

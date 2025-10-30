@@ -36,7 +36,7 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 		response.Error = err
 		response.ErrorMessage = "Erro ao decodificar o recebimento"
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -48,7 +48,7 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 		response.Error = err
 		response.ErrorMessage = "Erro interno na validação do recebimento"
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -56,7 +56,7 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 		response.IsSuccess = false
 		response.ErrorMessage = msg
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -72,7 +72,7 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 	//	response.IsSuccess = false
 	//	response.ErrorMessage = "Erro ao decodificar a imagem base64"
 	//	w.WriteHeader(http.StatusBadRequest)
-	//	w.Header().Set("Content-Type", "application/json")
+	//	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	//	json.NewEncoder(w).Encode(response)
 	//	return
 	//}
@@ -84,7 +84,7 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 	//	response.IsSuccess = false
 	//	response.ErrorMessage = "Erro ao salvar imagem local"
 	//	w.WriteHeader(http.StatusInternalServerError)
-	//	w.Header().Set("Content-Type", "application/json")
+	//	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	//	json.NewEncoder(w).Encode(response)
 	//	return
 	//}
@@ -96,13 +96,13 @@ func (h *RecebimentoHandler) CriarRecebimento(w http.ResponseWriter, r *http.Req
 		response.Error = err
 		response.ErrorMessage = err.Error()
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 	response.Data = recebimento
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 

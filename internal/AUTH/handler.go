@@ -36,7 +36,7 @@ func LoginHandler(s AuthService) http.HandlerFunc {
 		user, _ := s.GetUsuario(loginRequest.Username)
 		response.IsSuccess = true
 		response.Data = user
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 	}

@@ -24,7 +24,6 @@ type BoletoHandler interface {
 	GerarEEnviarRelatorioBoletos(w http.ResponseWriter, r *http.Request)
 	TotaisBoletos(w http.ResponseWriter, r *http.Request)
 	FiltrarBoletosPagosPorData(w http.ResponseWriter, r *http.Request)
-
 }
 
 type boletoHandler struct {
@@ -54,7 +53,7 @@ func (h *boletoHandler) CriarBoleto(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -79,7 +78,7 @@ func (h *boletoHandler) ListarBoletosPorFornecedor(w http.ResponseWriter, r *htt
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -104,7 +103,7 @@ func (h *boletoHandler) ListarBoletosPorRecebimento(w http.ResponseWriter, r *ht
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -129,7 +128,7 @@ func (h *boletoHandler) ListarBoletosDoDia(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -155,7 +154,7 @@ func (h *boletoHandler) PagarBoleto(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -165,7 +164,7 @@ func (h *boletoHandler) ListarBoletosPagos(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Erro ao listar boletos pagos: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(boletos)
 }
 
@@ -175,7 +174,7 @@ func (h *boletoHandler) ListarBoletosVencidos(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Erro ao listar boletos vencidos: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(boletos)
 }
 
@@ -185,7 +184,7 @@ func (h *boletoHandler) ListarBoletosPendentes(w http.ResponseWriter, r *http.Re
 		http.Error(w, "Erro ao listar boletos pendentes: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(boletos)
 }
 
@@ -213,7 +212,7 @@ func (h *boletoHandler) AtualizarBoleto(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 func (h *boletoHandler) GerarEEnviarRelatorioBoletos(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +272,7 @@ func (h *boletoHandler) GerarEEnviarRelatorioBoletos(w http.ResponseWriter, r *h
 }
 
 func writeJSON(w http.ResponseWriter, v interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(v)
 }
 
@@ -311,7 +310,7 @@ func (h *boletoHandler) TotaisBoletos(w http.ResponseWriter, r *http.Request) {
 		"pagosMes":      totalMesPagos,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 

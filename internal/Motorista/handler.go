@@ -173,7 +173,7 @@ func (h *motoristaHandler) AtualizarStatusMotorista(w http.ResponseWriter, r *ht
 }
 
 func (h *motoristaHandler) EditarMotorista(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	var motorista models.Motorista
 	response := models.ResponseDefaultModel{

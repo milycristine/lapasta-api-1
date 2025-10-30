@@ -49,12 +49,12 @@ func (h *fornecedorHandler) CriarFornecedor(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
 func (h *fornecedorHandler) EditarFornecedor(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	var fornecedor models.Fornecedor
 	response := models.ResponseDefaultModel{
@@ -126,12 +126,12 @@ func (h *fornecedorHandler) BuscarFornecedorPorCNPJouNome(w http.ResponseWriter,
 		Data:      fornecedor,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
 func (h *fornecedorHandler) CriarPedido(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	var pedido models.PedidoFornecedor
 	response := models.ResponseDefaultModel{IsSuccess: true}
 
@@ -181,7 +181,7 @@ func (h *fornecedorHandler) ListarPedidosPorFornecedor(w http.ResponseWriter, r 
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -214,6 +214,6 @@ func (h *fornecedorHandler) BuscarPedidosFornecedorPorDescricaoOuId(w http.Respo
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }

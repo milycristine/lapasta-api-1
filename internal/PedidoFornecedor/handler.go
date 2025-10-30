@@ -39,7 +39,7 @@ func (h *pedidoFornecedorHandler) CriarPedido(w http.ResponseWriter, r *http.Req
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -70,6 +70,6 @@ func (h *pedidoFornecedorHandler) ListarPedidosPorFornecedor(w http.ResponseWrit
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }

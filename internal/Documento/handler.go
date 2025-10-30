@@ -3,6 +3,7 @@ package documento
 import (
 	"encoding/base64"
 	"encoding/json"
+
 	//"lapasta/config"
 	"lapasta/internal/models"
 	//"lapasta/internal/s3client"
@@ -43,7 +44,7 @@ func (h *documentoHandler) CriarDocumento(w http.ResponseWriter, r *http.Request
 		response.Error = err
 		response.ErrorMessage = "Erro ao decodificar o documento"
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -59,7 +60,7 @@ func (h *documentoHandler) CriarDocumento(w http.ResponseWriter, r *http.Request
 		response.IsSuccess = false
 		response.ErrorMessage = "Erro ao decodificar o documento base64"
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -74,7 +75,7 @@ func (h *documentoHandler) CriarDocumento(w http.ResponseWriter, r *http.Request
 		response.IsSuccess = false
 		response.ErrorMessage = "Erro ao salvar imagem local"
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -87,14 +88,14 @@ func (h *documentoHandler) CriarDocumento(w http.ResponseWriter, r *http.Request
 		response.Error = err
 		response.ErrorMessage = err.Error()
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 
 	response.Data = documento
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
 }
 func (h *documentoHandler) ListarDocumentos(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +162,7 @@ func (h *documentoHandler) FiltrarDataDocumento(w http.ResponseWriter, r *http.R
 			Error:        err,
 			ErrorMessage: "Erro ao listar documentos por data",
 		}
-		//w.Header().Set("Content-Type", "application/json")
+		//w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response)
@@ -173,7 +174,7 @@ func (h *documentoHandler) FiltrarDataDocumento(w http.ResponseWriter, r *http.R
 		Data:      pontos,
 	}
 
-	//w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
