@@ -5,11 +5,14 @@ import (
 
 	dbsql "lapasta/database"
 	funcionario "lapasta/internal/Funcionario"
+	ponto "lapasta/internal/Ponto"
 )
 
 // / RegisterFuncionarioRoutes registra endpoints relacionados a funcionarios.
 func RegisterFuncionarioRoutes(mux *http.ServeMux, db *dbsql.SQLStr) {
-	repo := funcionario.NovoFuncionarioRepository(db)
+	pontoRepo := ponto.NovoPontoRepository(db)
+
+	repo := funcionario.NovoFuncionarioRepository(db, pontoRepo)
 	svc := funcionario.NovoFuncionarioService(repo)
 	handler := funcionario.NovoFuncionarioHandler(svc)
 

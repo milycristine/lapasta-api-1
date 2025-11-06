@@ -1,14 +1,13 @@
 package documento
 
 import (
-	"lapasta/internal/models"
 	"time"
 )
 
 type DocumentoService interface {
-	CriarDocumento(documento *models.Documento) error
-	ListarDocumentos(page int) ([]models.Documento, error)
-	FiltrarDataDocumento(inicioData, fimData time.Time) ([]models.Documento, error)
+	CriarDocumento(documento *Documento) error
+	ListarDocumentos(page int) ([]Documento, error)
+	FiltrarDataDocumento(inicioData, fimData time.Time) ([]Documento, error)
 }
 
 type documentoService struct {
@@ -21,13 +20,13 @@ func NovoDocumentoService(repo DocumentoRepository) DocumentoService {
 	}
 }
 
-func (s *documentoService) CriarDocumento(documento *models.Documento) error {
+func (s *documentoService) CriarDocumento(documento *Documento) error {
 	return s.repo.CriarDocumento(documento)
 }
 
-func (s *documentoService) ListarDocumentos(page int) ([]models.Documento, error) {
+func (s *documentoService) ListarDocumentos(page int) ([]Documento, error) {
 	return s.repo.ListarDocumentos(page)
 }
-func (s *documentoService) FiltrarDataDocumento(inicioData, fimData time.Time) ([]models.Documento, error) {
+func (s *documentoService) FiltrarDataDocumento(inicioData, fimData time.Time) ([]Documento, error) {
 	return s.repo.FiltrarDataDocumento(inicioData, fimData)
 }

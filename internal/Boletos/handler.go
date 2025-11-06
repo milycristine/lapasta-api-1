@@ -12,7 +12,7 @@ import (
 )
 
 type BoletoHandler interface {
-	CriarBoleto(w http.ResponseWriter, r *http.Request)
+	CriarBoletoRecebido(w http.ResponseWriter, r *http.Request)
 	ListarBoletosPorFornecedor(w http.ResponseWriter, r *http.Request)
 	ListarBoletosPorRecebimento(w http.ResponseWriter, r *http.Request)
 	ListarBoletosDoDia(w http.ResponseWriter, r *http.Request)
@@ -36,7 +36,7 @@ func NovoBoletoHandler(service BoletoService) BoletoHandler {
 	}
 }
 
-func (h *boletoHandler) CriarBoleto(w http.ResponseWriter, r *http.Request) {
+func (h *boletoHandler) CriarBoletoRecebido(w http.ResponseWriter, r *http.Request) {
 	var boleto models.Boleto
 	response := models.ResponseDefaultModel{IsSuccess: true}
 
@@ -44,7 +44,7 @@ func (h *boletoHandler) CriarBoleto(w http.ResponseWriter, r *http.Request) {
 		response.IsSuccess = false
 		response.ErrorMessage = "Erro ao decodificar o boleto"
 		w.WriteHeader(http.StatusBadRequest)
-	} else if err := h.service.CriarBoleto(&boleto); err != nil {
+	} else if err := h.service.CriarBoletoRecebido(&boleto); err != nil {
 		response.IsSuccess = false
 		response.ErrorMessage = "Erro ao criar boleto"
 		w.WriteHeader(http.StatusInternalServerError)

@@ -28,8 +28,8 @@ type BoletoRelatorio struct {
 }
 
 func (b *Boleto) DataPagamentoOrDefault() string {
-    if b.DataPagamento != nil {
-        return *b.DataPagamento
-    }
-    return ""
+	if b.DataPagamento != nil {
+		return *b.DataPagamento
+	}
+	return ""
 }

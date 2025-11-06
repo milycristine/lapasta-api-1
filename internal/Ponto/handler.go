@@ -1,4 +1,3 @@
-// handler/ponto.go
 package ponto
 
 import (

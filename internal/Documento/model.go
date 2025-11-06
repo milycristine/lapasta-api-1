@@ -1,4 +1,4 @@
-package models
+package documento
 
 type Documento struct {
 	Id              int    `json:"id"`

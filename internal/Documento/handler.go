@@ -32,7 +32,7 @@ func NovoDocumentoHandler(service DocumentoService) DocumentoHandler {
 }
 
 func (h *documentoHandler) CriarDocumento(w http.ResponseWriter, r *http.Request) {
-	var documento models.Documento
+	var documento Documento
 	response := models.ResponseDefaultModel{
 		IsSuccess: true,
 		Data:      documento,

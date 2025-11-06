@@ -13,7 +13,7 @@ func RegisterBoletoRoutes(mux *http.ServeMux, db *dbsql.SQLStr) {
 	svc := boleto.NovoBoletoService(repo)
 	handler := boleto.NovoBoletoHandler(svc)
 
-	mux.HandleFunc("/boleto", handler.CriarBoleto)
+	mux.HandleFunc("/boleto", handler.CriarBoletoRecebido)
 	mux.HandleFunc("/listarPorPedido", handler.ListarBoletosPorRecebimento)
 	mux.HandleFunc("/listarPorFornecedor", handler.ListarBoletosPorFornecedor)
 	mux.HandleFunc("/boletodoDia", handler.ListarBoletosDoDia)

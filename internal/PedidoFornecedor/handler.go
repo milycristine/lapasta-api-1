@@ -3,6 +3,7 @@ package pedidofornecedor
 import (
 	"encoding/json"
 	"lapasta/internal/models"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -23,23 +24,26 @@ func NovoPedidoFornecedorHandler(service PedidoFornecedorService) PedidoForneced
 }
 
 func (h *pedidoFornecedorHandler) CriarPedido(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	var pedido models.PedidoFornecedor
 	response := models.ResponseDefaultModel{IsSuccess: true}
 
 	if err := json.NewDecoder(r.Body).Decode(&pedido); err != nil {
-		response.IsSuccess = false
-		response.ErrorMessage = "Erro ao decodificar o pedido"
-		w.WriteHeader(http.StatusBadRequest)
-	} else if err := h.service.CriarPedidoFornecedor(&pedido); err != nil {
-		response.IsSuccess = false
-		response.ErrorMessage = err.Error()
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		response.Data = pedido
-		w.WriteHeader(http.StatusCreated)
+		log.Printf("Erro ao decodificar pedido: %v", err)
+		http.Error(w, `{"isSuccess":false,"errorMessage":"Erro ao decodificar o pedido"}`, http.StatusBadRequest)
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	log.Printf("Pedido recebido: %+v", pedido)
+
+	if err := h.service.CriarPedidoFornecedor(&pedido); err != nil {
+		log.Printf("Erro ao criar pedido: %v", err)
+		http.Error(w, `{"isSuccess":false,"errorMessage":"Erro ao criar pedido"}`, http.StatusInternalServerError)
+		return
+	}
+
+	response.Data = pedido
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
 }
 

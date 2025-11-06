@@ -1,4 +1,3 @@
-// service/ponto.go
 package ponto
 
 import (
@@ -66,4 +65,3 @@ func (s *pontoService) RegistrarSaida(idFuncionario int) error {
 func (s *pontoService) GerarRelatorioMensal(mes int, ano int, emailAdmin string) (string, error) {
 	return s.repo.GerarRelatorioMensal(mes, ano, emailAdmin)
 }
-

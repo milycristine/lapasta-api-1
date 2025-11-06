@@ -17,7 +17,5 @@ func RegisterFornecedorRoutes(mux *http.ServeMux, db  *dbsql.SQLStr) {
 	mux.HandleFunc("/editarFornecedores", handler.EditarFornecedor)
 	mux.HandleFunc("/listarFornecedores", handler.ListarFornecedores)
 	mux.HandleFunc("/fornecedores/buscar", handler.BuscarFornecedorPorCNPJouNome)
-	mux.HandleFunc("/pedidoFornecedor", handler.CriarPedido)
-	mux.HandleFunc("/listarPedido", handler.ListarPedidosPorFornecedor)
 	mux.HandleFunc("/buscarPedidoId", handler.BuscarPedidosFornecedorPorDescricaoOuId)
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type BoletoService interface {
-	CriarBoleto(boleto *models.Boleto) error
+	CriarBoletoRecebido(boleto *models.Boleto) error
 	ListarBoletosPorFornecedor(fornecedorId int) ([]models.Boleto, error)
 	ListarBoletosPorRecebimento(recebimentoId int) ([]models.Boleto, error)
 	ListarBoletosDoDia(data string) ([]models.Boleto, error)
@@ -32,8 +32,8 @@ func NovoBoletoService(repo BoletoRepository) BoletoService {
 	}
 }
 
-func (s *boletoService) CriarBoleto(boleto *models.Boleto) error {
-	return s.repo.CriarBoleto(boleto)
+func (s *boletoService) CriarBoletoRecebido(boleto *models.Boleto) error {
+	return s.repo.CriarBoletoRecebido(boleto)
 }
 
 func (s *boletoService) ListarBoletosPorFornecedor(fornecedorId int) ([]models.Boleto, error) {
