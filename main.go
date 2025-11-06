@@ -1,18 +1,21 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"log"
 
-	config "lapasta/config"
-	database "lapasta/database"
+	"lapasta/config"
+	dbsql "lapasta/database"
 	utils "lapasta/internal/Utils"
-	server "lapasta/server"
+	"lapasta/pkg/server"
 )
+
+var embeddedAssets embed.FS
 
 func main() {
 	var createConfig bool
-	flag.BoolVar(&createConfig, "config", false, "create config.yaml file")
+	flag.BoolVar(&createConfig, "config", false, "cria o arquivo config.yaml")
 	flag.Parse()
 
 	if createConfig {
@@ -20,17 +23,25 @@ func main() {
 		return
 	}
 
-	log.Print("loading config file")
+	log.Println("Carregando config.yaml ...")
 	if err := config.LoadConfig(); err != nil {
 		log.Fatal(err)
 	}
 
-	log.Print("connecting sql ...")
-	connectionLinx, err := database.MakeSQL(config.Yml.SQL.Host, config.Yml.SQL.Port, config.Yml.SQL.User, config.Yml.SQL.Password)
+	log.Println("Conectando ao SQL Server ...")
+	connection, err := dbsql.MakeSQL(
+		config.Yml.SQL.Host,
+		config.Yml.SQL.Port,
+		config.Yml.SQL.User,
+		config.Yml.SQL.Password,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	utils.SetSQLConn(connectionLinx)
-	server.Controllers()
+	utils.SetSQLConn(connection)
+
+	if err := server.StartServer(config.Yml.API.Port, connection, embeddedAssets); err != nil {
+		log.Fatalf("Erro ao iniciar servidor: %v", err)
+	}
 }
